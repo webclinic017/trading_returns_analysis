@@ -657,19 +657,34 @@ def GENERATE_FIX_TAKE_PROFIT_PRICE(data = None,
 
 #%% Generate volatility based of high and low price lagging by 1 unit and take the absolute value
 
-def GENERATE_HIGH_TO_LOW_VOLATILITY_SCORE(data = None,
-                                          _period_number = None,
-                                          _column_high: (str) = None,
-                                          _column_low: (str) = None):
+def GENERATE_HIGH_TO_LOW_VOLATILITY_SCORE(_df_data = None, _variant_number_of_period = None,_column_high: (str) = None, _column_low: (str) = None):
+    """[summary]
+
+    Args:
+        _df_data (pandas.core.frame.DataFrame, required): Defaults to None.
+            The data frame consist of Date as index, columns (Open, High, Low, and Close)
+
+        _variant_number_of_period (int or str, required): Defaults to None.
+            this variable is being used by pandas.rolling() function that can either be an integer or string
+
+            Examples
+            ----------
+            >>> df.column1.rolling(2).apply(lambda x: print(x))
+            >>> df.column1.rolling('30D').apply(lambda x: print(x))
+            >>> df.column1.rolling('30D').apply(lambda x: print(x))
+
+        _column_high ([type], optional): [description]. Defaults to None.
+        _column_low ([type], optional): [description]. Defaults to None.
+
+    Returns:
+        pandas.core.series.Series
     """
-    generate volatility using standard deviation from the percentage change between high and low price
-    and to get the percetage score overtime using expanding function
     
-    """
     
+
     df_fx = data.copy()
     df_fx['PercentChangeHighToLow'] = abs(df_fx[_column_high].shift(1) / df_fx[_column_low].shift(1) - 1)   
-    df_fx['Volatility'] = df_fx['PercentChangeHighToLow'].fillna(method = 'ffill').rolling(_period_number).apply(lambda x: statistics.stdev(list(x)))    
+    df_fx['Volatility'] = df_fx['PercentChangeHighToLow'].fillna(method = 'ffill').rolling(_variant_number_of_period).apply(lambda x: statistics.stdev(list(x)))    
     df_fx['VolatilityRank'] = df_fx['Volatility'].expanding().apply(lambda x: stats.percentileofscore(x,x[-1]))
     
     return df_fx
