@@ -657,10 +657,17 @@ def GENERATE_FIX_TAKE_PROFIT_PRICE(data = None,
 
 #%% Generate volatility based of high and low price lagging by 1 unit and take the absolute value
 
-def GENERATE_HIGH_TO_LOW_VOLATILITY_SCORE(_df_data = None, _variant_number_of_period = None,_column_high: (str) = None, _column_low: (str) = None):
-    """[summary]
+def GENERATE_HIGH_TO_LOW_VOLATILITY_SCORE(  _df_data = None, 
+                                            _variant_number_of_period = None,
+                                            _str_column_high: (str) = None,
+                                            _str_column_low: (str) = None):
+    """
+    This function measure the volatility of the price using the high and low price of a certain period.
+    Then, the volatility will then be rank cumulatively since start of the data.
+    Finally, this function will return a pandas series as a result
 
     Args:
+    ----------
         _df_data (pandas.core.frame.DataFrame, required): Defaults to None.
             The data frame consist of Date as index, columns (Open, High, Low, and Close)
 
@@ -673,21 +680,41 @@ def GENERATE_HIGH_TO_LOW_VOLATILITY_SCORE(_df_data = None, _variant_number_of_pe
             >>> df.column1.rolling('30D').apply(lambda x: print(x))
             >>> df.column1.rolling('30D').apply(lambda x: print(x))
 
-        _column_high ([type], optional): [description]. Defaults to None.
-        _column_low ([type], optional): [description]. Defaults to None.
+        _column_high (str, required): 
+            Provide the column name that contains the High price of the period. Defaults to None.
+
+        _column_low (str, required): 
+            Provide the column name that contains the High price of the period. Defaults to None.
 
     Returns:
+    ----------
         pandas.core.series.Series
+
+        Example
+        ----------
+
+            >>> _df_output["VolatilityRank"] = GENERATE_HIGH_TO_LOW_VOLATILITY_SCORE(_df_data = None, 
+            ...                                                                     _variant_number_of_period = None,
+            ...                                                                     _str_column_high: (str) = None,
+            ...                                                                    _str_column_low: (str) = None)
+
     """
     
     
 
-    df_fx = data.copy()
-    df_fx['PercentChangeHighToLow'] = abs(df_fx[_column_high].shift(1) / df_fx[_column_low].shift(1) - 1)   
+    df_fx = _df_data.copy()
+
+    #Take the previous 1 period by using shift(1) to calculate the percentage difference of the high and low price.
+    df_fx['PercentChangeHighToLow'] = abs(df_fx[_str_column_high].shift(1) / df_fx[_str_column_low].shift(1) - 1)   
+
+    #Calculate the volatility using standard deviation of the specified _variant_number_of_period
     df_fx['Volatility'] = df_fx['PercentChangeHighToLow'].fillna(method = 'ffill').rolling(_variant_number_of_period).apply(lambda x: statistics.stdev(list(x)))    
+
+    #Find the percentile rank of the current volatility relative to the historical volatility starting from the beginning ofthe data denoted by the function expanding()
     df_fx['VolatilityRank'] = df_fx['Volatility'].expanding().apply(lambda x: stats.percentileofscore(x,x[-1]))
     
-    return df_fx
+    #Finally, return a pandas series of the historical percentile rank of the _variant_number_of_period period volatility.
+    return pd.Series(df_fx['VolatilityRank'])
 
 
 
@@ -716,3 +743,6 @@ def GENERATE_HIGH_TO_LOW_VOLATILITY_SCORE(_df_data = None, _variant_number_of_pe
 
 
 
+
+# %%
+#
