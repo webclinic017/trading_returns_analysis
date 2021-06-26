@@ -618,10 +618,22 @@ def RETURNS_ANALYSIS(data = None,
 #%% Create a simulated trade based on random number generation between 0 & 2
 
 
-def GENERATE_RANDOM_TRADE_DIRECTION(data = None):
+def GENERATE_RANDOM_TRADE_DIRECTION(_df_data = None):
+    """
+    Description
+    ---------- 
+        This function enables you to generate a random trade direction for simulation purpose only
+
+    Args:
+        _df_data (pandas.core.frame.DataFrame, required): A pandas dataframe. Defaults to None.
+
+    Returns:
+        pandas.core.series.Series: pandas series
+    """
     
-    df_fx = data.copy()
+    df_fx = _df_data.copy()
     
+
     df_fx['TradeDirection'] = [random.randint(0, 2) for _ in range(df_fx.shape[0])]
     
     df_fx['TradeDirection'] = np.where(df_fx['TradeDirection'] == 0,
@@ -636,7 +648,7 @@ def GENERATE_RANDOM_TRADE_DIRECTION(data = None):
                                        'Hold',
                                        df_fx['TradeDirection'])
     
-    return df_fx
+    return pd.Series(df_fx['TradeDirection'])
 
 #%% Generatefix take profit
 
