@@ -7,68 +7,106 @@ Created on Sun Feb  7 10:36:05 2021
 
 #%% Set Variables
 
-_currency = 'EURUSD'
-_timeframe = 'D'
-_hours_offset = 3
-_from_date = '20001201'
-_to_date = '20101231'
-_takeprofit_rate = 0.0100
-_stoploss_rate = 0.0030
+_str_currency = 'EURUSD'
+_str_timeframe = 'D'
+_int_hours_offset = 3
+_float_takeprofit_rate = 0.0100
+_float_stoploss_rate = 0.0030
 
 #%% Import modules
 
+"""
+>>> git clone -b production https://github.com/Iankfc/asset_price_etl.git
+
+"""
+
+from numba.core.errors import HighlightColorScheme
 import pandas as pd
-import fx_histadata as fx
 import numpy as np
 from numba import njit
-
 import warnings
-from sqlconnect import read_sql_data
-import module_trading_formula as tradingformula
+from modules.SQL_Connection import CONNECT_TO_SQL_SERVER as _module_sc
+from modules.asset_price_etl import fx_sql_to_pandas_1 as _module_fx_etl
+import __init__ as tradingformula
+#import fx_histadata as fx
 import statistics
 from scipy import stats
+import plotly.graph_objects as go
+import plotly.io as pio
+from plotly.subplots import make_subplots
 
 
-#%%
+
+#%% Remove warnings
 warnings.filterwarnings('ignore')
 
-#%%
-_sqlquery = open('sql_get_fx_data.txt','r').read().format(_currency = _currency,
-                                                      _hours_offset = _hours_offset,
-                                                      _from_date = _from_date,
-                                                      _to_date = _to_date,
-                                                      _time_frame = _timeframe)
 
-df_fx_raw_data = read_sql_data(server = 'DESKTOP-SEQC76J\SQLEXPRESS',
-                                database = 'fxalgo',
-                                _sqlquery = _sqlquery
-                                )
+#%% ETL load fx eurusd historical price
 
-df_fx_raw_data = df_fx_raw_data.sort_values('Date', ascending = True)
+df_fx_raw_data = _module_fx_etl._function_extract('./modules/asset_price_etl/sql_queries/sql_get_fx_data_eurusd.sql')
 
-df_fx_raw_data = df_fx_raw_data.set_index('Date')
-                
+
+#%% Sort datetimie into ascending order and set datetime as the index
+
+df_fx_raw_data = df_fx_raw_data.sort_values('DateTime', ascending = True)
+
+df_fx_raw_data = df_fx_raw_data.set_index('DateTime')
+
+#%% Resample price into desire timeframe
+
+df_fx_raw_data = df_fx_raw_data.resample(_str_timeframe).agg({'Open':'first',
+                                                                'High':'max',
+                                                                'Low':'min',
+                                                                'Close':'last'
+                                                                })
+
+
 #%% Create a copy of the raw data 
 
 df_fx = df_fx_raw_data.copy()
 
-#%%
+#%% Calculate the daily percentage from high to low and take the absolute value
+df_fx['VolatilityRank'] = tradingformula.GENERATE_HIGH_TO_LOW_VOLATILITY_SCORE(_df_data = df_fx,
+                                                                                _variant_number_of_period = '30D',
+                                                                                _str_expanding_or_rolling_historical_volatility = 'rolling',
+                                                                                _int_rolling_number_of_days = 90,
+                                                                                _str_column_high = 'High',
+                                                                                _str_column_low = 'Low')
 
-#Calculate the daily percentage from high to low and take the absolute value
-df_fx = tradingformula.GENERATE_HIGH_TO_LOW_VOLATILITY_SCORE(data = df_fx,
+#%% Create a plotly plot that shows the fx price together with the volatility
 
-                                          _period_number = '30D',
-                                          _column_high = 'High',
-                                          _column_low = 'Low')
+_obj_fig = make_subplots(rows = 2, cols=1, shared_xaxes=True)
+
+
+_obj_fig.add_trace(go.Candlestick(
+                                            x = df_fx.index,
+                                            open = df_fx.Open,
+                                            high = df_fx.High,
+                                            low = df_fx.Low,
+                                            close = df_fx.Close
+                                            ),
+                    row = 1,
+                    col=1
+                    )
+
+_obj_fig.add_trace(go.Scatter(x = df_fx.index,y = df_fx.VolatilityRank),
+                    row = 2,
+                    col = 1)
+
+_obj_fig.update_layout(xaxis_rangeslider_visible=False)
+
+pio.renderers.default = 'browser'
+
+pio.show(_obj_fig)
 
 #%% Create a random sample of Long Short Hold
 
-df_fx = tradingformula.GENERATE_RANDOM_TRADE_DIRECTION(data = df_fx)
+df_fx['TradeDirection'] = tradingformula.GENERATE_RANDOM_TRADE_DIRECTION(_df_data = df_fx)
 
 
-#%%
+#%% This is an example of volatility filter on when to trade and when not to trade at a specific volatility rank
 
-df_fx['TradeDirection'] = np.where(df_fx['VolatilityRank'] >= 50, 
+df_fx['TradeDirection'] = np.where((df_fx['VolatilityRank'] >= 20) & (df_fx['VolatilityRank'] <= 80), 
                                    df_fx['TradeDirection'],
                                    'Hold')
 
@@ -76,14 +114,14 @@ df_fx['TradeDirection'] = np.where(df_fx['VolatilityRank'] >= 50,
 
 #%% Create a Long take profit of 2%
 
-df_fx = tradingformula.GENERATE_FIX_TAKE_PROFIT_PRICE(data = df_fx,
-                                                      _takeprofit_rate = _takeprofit_rate)
+df_fx['TakeProfitPrice'] = tradingformula.GENERATE_FIX_TAKE_PROFIT_PRICE(_df_data = df_fx,
+                                                                         _float_takeprofit_rate = _float_takeprofit_rate)
 
 #%% Add column for Stoploss Price Relative to the open price
 
-df_fx = tradingformula.GENERATE_FIX_AND_SEPARATE_LONG_SHORT_STOPLOSS(data = df_fx,
-                                                                     _column_Open_price = 'Open',
-                                                                     _stoploss_rate = _stoploss_rate)
+df_fx = tradingformula.GENERATE_FIX_AND_SEPARATE_LONG_SHORT_STOPLOSS(_df_data = df_fx,
+                                                                     _str_column_Open_price = 'Open',
+                                                                     _float_stoploss_rate = _float_stoploss_rate)
 
 #%% Create a new column that determines if the previous i
 #period created a higher high or lower high or higher low or lower low

@@ -464,6 +464,7 @@ def func(data = None,
             
         return df_fx
 
+#%%
 
 def GET_TAKE_PROFIT_AND_DATE(data = None,
                              _column_high_price: (str) = None,
@@ -526,20 +527,29 @@ def GENERATE_FINAL_EXIT_PRICE(data = None,
 
 #%% genera
 
-def GENERATE_FIX_AND_SEPARATE_LONG_SHORT_STOPLOSS(data = None,
-                            _column_Open_price: (str) = None,
-                            _stoploss_rate: (float) = None):
-    
+def GENERATE_FIX_AND_SEPARATE_LONG_SHORT_STOPLOSS(_df_data = None,
+                                                _str_column_Open_price: (str) = None,
+                                                _float_stoploss_rate: (float) = None):
     """
+    Description:
+    ------
     The objective of the formula is to create a separate column of stoploss for long and short position 
     based on exactly the same percentage from the open price
 
+    Args:
+        data ([type], optional): [description]. Defaults to None.
+        _column_Open_price ([type], optional): [description]. Defaults to None.
+        _stoploss_rate ([type], optional): [description]. Defaults to None.
+
+    Returns:
+        [type]: [description]
     """
-    df_fx = data.copy()
+
+    df_fx = _df_data.copy()
     
-    df_fx['LongStopLossRelativetoOpenPrice'] = df_fx[_column_Open_price] * (1 - _stoploss_rate)
+    df_fx['LongStopLossRelativetoOpenPrice'] = df_fx[_str_column_Open_price] * (1 - _float_stoploss_rate)
     
-    df_fx['ShortStopLossRelativetoOpenPrice'] = df_fx[_column_Open_price] * (1 + _stoploss_rate)
+    df_fx['ShortStopLossRelativetoOpenPrice'] = df_fx[_str_column_Open_price] * (1 + _float_stoploss_rate)
     
     return df_fx
 
@@ -625,10 +635,16 @@ def GENERATE_RANDOM_TRADE_DIRECTION(_df_data = None):
         This function enables you to generate a random trade direction for simulation purpose only
 
     Args:
+    ---------- 
         _df_data (pandas.core.frame.DataFrame, required): A pandas dataframe. Defaults to None.
 
     Returns:
+    ---------- 
         pandas.core.series.Series: pandas series
+
+    Example:
+    -----
+    >>> df_fx['TradeDirection'] = tradingformula.GENERATE_RANDOM_TRADE_DIRECTION(_df_data = df_fx)
     """
     
     df_fx = _df_data.copy()
@@ -652,25 +668,42 @@ def GENERATE_RANDOM_TRADE_DIRECTION(_df_data = None):
 
 #%% Generatefix take profit
 
-def GENERATE_FIX_TAKE_PROFIT_PRICE(data = None,
-                                   _takeprofit_rate: (float) = None):
-    df_fx = data.copy()
+def GENERATE_FIX_TAKE_PROFIT_PRICE(_df_data = None,
+                                   _float_takeprofit_rate: (float) = None,
+                                   _str_column_name_tradedirection: str = None):
+    """
+    Description
+    ----
+        This function allows you to set a fix rate relative to the open price as the take profit
+
+    Args:
+        _df_data ([type], optional): [description]. Defaults to None.
+        _float_takeprofit_rate ([type], optional): [description]. Defaults to None.
+        _str_column_name_tradedirection (str, optional): [description]. Defaults to None.
+
+    Returns:
+        [type]: [description]
+    """
+
+    df_fx = _df_data.copy()
     df_fx['TakeProfitPrice'] = np.nan
     df_fx['TakeProfitPrice'] = np.where(df_fx['TradeDirection'] =='Long',
-                                            df_fx['Open'] * (1 + _takeprofit_rate),
+                                            df_fx['Open'] * (1 + _float_takeprofit_rate),
                                             df_fx['TakeProfitPrice']
                                             )
                                             
     df_fx['TakeProfitPrice'] = np.where(df_fx['TradeDirection'] =='Short',
-                                            df_fx['Open'] * (1 - _takeprofit_rate),
+                                            df_fx['Open'] * (1 - _float_takeprofit_rate),
                                             df_fx['TakeProfitPrice']
                                             )
-    return df_fx
+    return pd.Series(df_fx['TakeProfitPrice'])
 
 #%% Generate volatility based of high and low price lagging by 1 unit and take the absolute value
 
 def GENERATE_HIGH_TO_LOW_VOLATILITY_SCORE(  _df_data = None, 
                                             _variant_number_of_period = None,
+                                            _str_expanding_or_rolling_historical_volatility: str = ('expanding','rolling'),
+                                            _int_rolling_number_of_days: int = None,
                                             _str_column_high: (str) = None,
                                             _str_column_low: (str) = None):
     """
@@ -691,6 +724,11 @@ def GENERATE_HIGH_TO_LOW_VOLATILITY_SCORE(  _df_data = None,
             >>> df.column1.rolling(2).apply(lambda x: print(x))
             >>> df.column1.rolling('30D').apply(lambda x: print(x))
             >>> df.column1.rolling('30D').apply(lambda x: print(x))
+        _str_expanding_or_rolling_historical_volatility (str ('expanding','rolling'), required)
+            This is the lenght of period at which the most recent volatility (measure usign StdDev) will be benchmark against to get the percentile rank from.
+
+        _int_rolling_number_of_days (int, required if the _str_expanding_or_rolling_historical_volatility variable is equal to 'exapanding')
+            This is the lenght of period at which the most recent volatility (measure usign StdDev) will be benchmark against to get the percentile rank from.
 
         _column_high (str, required): 
             Provide the column name that contains the High price of the period. Defaults to None.
@@ -723,7 +761,11 @@ def GENERATE_HIGH_TO_LOW_VOLATILITY_SCORE(  _df_data = None,
     df_fx['Volatility'] = df_fx['PercentChangeHighToLow'].fillna(method = 'ffill').rolling(_variant_number_of_period).apply(lambda x: statistics.stdev(list(x)))    
 
     #Find the percentile rank of the current volatility relative to the historical volatility starting from the beginning ofthe data denoted by the function expanding()
-    df_fx['VolatilityRank'] = df_fx['Volatility'].expanding().apply(lambda x: stats.percentileofscore(x,x[-1]))
+    
+    if _str_expanding_or_rolling_historical_volatility == 'expanding':
+        df_fx['VolatilityRank'] = df_fx['Volatility'].expanding().apply(lambda x: stats.percentileofscore(x,x[-1]))
+    elif _str_expanding_or_rolling_historical_volatility == 'rolling':
+        df_fx['VolatilityRank'] = df_fx['Volatility'].rolling(f"{_int_rolling_number_of_days}D").apply(lambda x: stats.percentileofscore(x,x[-1]))
     
     #Finally, return a pandas series of the historical percentile rank of the _variant_number_of_period period volatility.
     return pd.Series(df_fx['VolatilityRank'])
