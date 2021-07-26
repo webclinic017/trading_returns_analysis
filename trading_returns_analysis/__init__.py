@@ -559,7 +559,7 @@ def GENERATE_HIGHER_HIGH_LOWER_LOW_COLUMN(data = None,
                                          _column_row_price: (str) = None
                                          ):
     """
-    Add column for Higher High and Lower low 1 period lag
+    Add column for Higher High and Lower low 1 period lag+
     """
     
     df_fx = data.copy()

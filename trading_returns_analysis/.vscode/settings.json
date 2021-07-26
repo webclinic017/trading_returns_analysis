@@ -1,0 +1,28 @@
+{
+    "jira-plugin.workingProject": ""
+}
+
+{
+    "key": "shift+enter",
+    "command": "-python.execSelectionInTerminal",
+    "when": "editorTextFocus && !findInputFocussed && !jupyter.ownsSelection && !notebookEditorFocused && !replaceInputFocussed && editorLangId == 'python'"
+},
+{
+    "key": "f9",
+    "command": "jupyter.execSelectionInteractive",
+    "when": "editorTextFocus && isWorkspaceTrusted && jupyter.ownsSelection && !findInputFocussed && !notebookEditorFocused && !replaceInputFocussed && editorLangId == 'python'"
+},
+{
+    "key": "shift+enter",
+    "command": "-jupyter.execSelectionInteractive",
+    "when": "editorTextFocus && isWorkspaceTrusted && jupyter.ownsSelection && !findInputFocussed && !notebookEditorFocused && !replaceInputFocussed && editorLangId == 'python'"
+},
+{
+    "key": "ctrl+up",
+    "command": "editor.action.fontZoomIn"
+},
+{
+    "key": "f11",
+    "command": "editor.debug.action.toggleBreakpoint",
+    "when": "debuggersAvailable && editorTextFocus"
+}

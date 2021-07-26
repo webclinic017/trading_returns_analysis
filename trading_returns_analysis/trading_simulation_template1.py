@@ -15,20 +15,15 @@ _float_stoploss_rate = 0.0030
 
 #%% Import modules
 
-"""
->>> git clone -b production https://github.com/Iankfc/asset_price_etl.git
-
-"""
 
 from numba.core.errors import HighlightColorScheme
 import pandas as pd
 import numpy as np
 from numba import njit
 import warnings
-from modules.SQL_Connection import CONNECT_TO_SQL_SERVER as _module_sc
-from modules.asset_price_etl import fx_sql_to_pandas_1 as _module_fx_etl
+from sqlconnection import CONNECT_TO_SQL_SERVER as _module_sc
+from asset_price_etl import etl_fx_histadata_001 as etl
 import __init__ as tradingformula
-#import fx_histadata as fx
 import statistics
 from scipy import stats
 import plotly.graph_objects as go
@@ -43,7 +38,8 @@ warnings.filterwarnings('ignore')
 
 #%% ETL load fx eurusd historical price
 
-df_fx_raw_data = _module_fx_etl._function_extract('./modules/asset_price_etl/sql_queries/sql_get_fx_data_eurusd.sql')
+df_fx_raw_data = etl._function_extract(_str_valuedate_start = '1/1/2010',
+                                        _str_valuedate_end = '12/31/2010')
 
 
 #%% Sort datetimie into ascending order and set datetime as the index
@@ -67,9 +63,9 @@ df_fx = df_fx_raw_data.copy()
 
 #%% Calculate the daily percentage from high to low and take the absolute value
 df_fx['VolatilityRank'] = tradingformula.GENERATE_HIGH_TO_LOW_VOLATILITY_SCORE(_df_data = df_fx,
-                                                                                _variant_number_of_period = '30D',
+                                                                                _variant_number_of_period = '2D',
                                                                                 _str_expanding_or_rolling_historical_volatility = 'rolling',
-                                                                                _int_rolling_number_of_days = 90,
+                                                                                _int_rolling_number_of_days = 30,
                                                                                 _str_column_high = 'High',
                                                                                 _str_column_low = 'Low')
 
@@ -79,15 +75,15 @@ _obj_fig = make_subplots(rows = 2, cols=1, shared_xaxes=True)
 
 
 _obj_fig.add_trace(go.Candlestick(
-                                            x = df_fx.index,
-                                            open = df_fx.Open,
-                                            high = df_fx.High,
-                                            low = df_fx.Low,
-                                            close = df_fx.Close
-                                            ),
-                    row = 1,
-                    col=1
-                    )
+                                    x = df_fx.index,
+                                    open = df_fx.Open,
+                                    high = df_fx.High,
+                                    low = df_fx.Low,
+                                    close = df_fx.Close
+                                    ),
+                                row = 1,
+                                col=1
+                                )
 
 _obj_fig.add_trace(go.Scatter(x = df_fx.index,y = df_fx.VolatilityRank),
                     row = 2,
@@ -190,35 +186,6 @@ df_fx.to_csv('OutputManualSenseCheck.csv')
 
 
 
-#%%
-import plotly.io as pio
-pio.renderers.default = 'browser'
-from plotly.subplots import make_subplots
-import plotly.graph_objects as go
-fig = make_subplots(rows=4, cols=1)
-
-fig.append_trace(go.Scatter(
-    x=df_fx.index,
-    y=df_fx['Open'],
-), row=1, col=1)
-
-fig.append_trace(go.Scatter(
-    x=df_fx.index,
-    y=df_fx['VolatilityRank'],
-), row=2, col=1)
-
-fig.append_trace(go.Scatter(
-    x=df_fx.index,
-    y=df_fx['Volatility']
-), row=3, col=1)
-
-fig.append_trace(go.Scatter(
-    x=df_fx.index,
-    y=df_fx['CumulativeReturn']
-), row=4, col=1)
-
-fig.update_layout(height=1000, width=2000, title_text="Stacked Subplots")
-pio.show(fig)
     
     
     
