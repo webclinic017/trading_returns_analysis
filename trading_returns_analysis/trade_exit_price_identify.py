@@ -199,9 +199,17 @@ def GET_EXIT_PRICE_BASED_ON_TRAILING_STOP(_df_data = None,
         ############ need to fix ##################
         
         if _trade_direction == 'Long':
+            """
             _long_trailing_stoploss = TRAILING_STOPLOSS(_nparray_high_low = np.array(_future_long_higher_low), 
                                                             _nparray_stoploss = np.array(_future_long_stoploss), 
                                                             _nparray_trade_direction = _trade_direction)
+
+            """
+
+            _long_trailing_stoploss = TRAILING_STOPLOSS_V2(pdSeries_future_high_price = _future_high,
+                                                            pdSeries_future_low_price = _future_low,
+                                                            pdSeries_future_stoploss = _future_long_stoploss,
+                                                            str_trade_direction = _trade_direction )                                          
 ########################## array vs single value to be resolved ####################
 
             """
@@ -244,11 +252,19 @@ def GET_EXIT_PRICE_BASED_ON_TRAILING_STOP(_df_data = None,
                 _long_trailing_exit_price = np.nan
                 _long_trailing_exit_date = np.nan
             
-        elif _trade_direction == 'Short':                                                
+        elif _trade_direction == 'Short': 
+            """                                               
             _short_trailing_stoploss = TRAILING_STOPLOSS(_nparray_high_low = np.array(_future_short_lower_high), 
                                                              _nparray_stoploss = np.array(_future_short_stoploss), 
                                                              _nparray_trade_direction = _trade_direction)
             
+            """
+            
+            _short_trailing_stoploss = TRAILING_STOPLOSS_V2(pdSeries_future_high_price = _future_high,
+                                                            pdSeries_future_low_price = _future_low,
+                                                            pdSeries_future_stoploss = _future_short_stoploss,
+                                                            str_trade_direction = _trade_direction ) 
+
             '''
             _condition = np.where( (list(_future_high >= _short_trailing_stoploss)) or (list(np.array(_future_low) <= _ShortStopLossRelativetoOpenPrice)),
                                     True,
@@ -430,6 +446,37 @@ def GENERATE_FUTURE_OPEN_HIGH_LOW_CLOSE_DATE_COLUMN(df_data = None,
         
     return df_data
 
+
+def TRAILING_STOPLOSS_V2(pdSeries_future_high_price = None,
+                         pdSeries_future_low_price = None,
+                         pdSeries_future_stoploss = None,
+                         str_trade_direction = None):
+
+    pdSeries_trailing_stoploss = []
+    if str_trade_direction == 'Long':
+
+        for int_index, float_stoploss in enumerate(pdSeries_future_stoploss):
+            if int_index == 0:
+                pdSeries_trailing_stoploss.append(pdSeries_future_stoploss[int_index])
+            else:
+                if (pdSeries_future_low_price[int_index - 1] < pdSeries_future_low_price[int_index]) and (pdSeries_trailing_stoploss[int_index - 1] < pdSeries_future_stoploss[int_index]):
+                    pdSeries_trailing_stoploss.append(pdSeries_future_stoploss[int_index])
+                else:
+                    pdSeries_trailing_stoploss.append(pdSeries_trailing_stoploss[int_index-1])   
+
+    elif str_trade_direction == 'Short':
+
+        for int_index, float_stoploss in enumerate(pdSeries_future_stoploss):
+            if int_index == 0:
+                pdSeries_trailing_stoploss.append(pdSeries_future_stoploss[int_index])
+            else:
+                if (pdSeries_future_high_price[int_index - 1] > pdSeries_future_high_price[int_index]) and (pdSeries_trailing_stoploss[int_index - 1] > pdSeries_future_stoploss[int_index]):
+                    pdSeries_trailing_stoploss.append(pdSeries_future_stoploss[int_index])
+                else:
+                    pdSeries_trailing_stoploss.append(pdSeries_trailing_stoploss[int_index-1]) 
+
+
+    return pdSeries_trailing_stoploss
 #%% Main function
 
 def _func_get_exit_price(_df_data = None,
