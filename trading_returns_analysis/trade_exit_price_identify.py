@@ -4,15 +4,13 @@
 import pandas as pd
 import numpy as np
 from asset_price_etl import etl_fx_histadata_001 as etl
-import sqlconnection as sc
-import random
 import warnings
 import plotly.graph_objects as go
 import plotly.io as pio
 from plotly.subplots import make_subplots
 
 #%% Supress warnings
-
+pd.set_option('display.max_columns',500)
 warnings.filterwarnings('ignore')
 
 #%% Generatefix take profit
@@ -90,20 +88,20 @@ def GENERATE_HIGHER_HIGH_LOWER_LOW_COLUMN(_df_data = None,
     _df_data['LongHigherHighHigherLow'] = np.nan
     _df_data['ShortLowerHighLowerLow'] = np.nan
     
-    _df_data['LongHigherHighHigherLow'] = np.where(_df_data[_str_low_price_column_name].shift(1) > _df_data[_str_low_price_column_name].shift(2),
+    _df_data['LongHigherHighHigherLow'] = np.where(_df_data[_str_low_price_column_name].shift(1) > _df_data[_str_low_price_column_name],
                                             'HigherLow',
                                             _df_data['LongHigherHighHigherLow'])
     
-    _df_data['LongHigherHighHigherLow'] = np.where(_df_data[_str_low_price_column_name].shift(1) < _df_data[_str_low_price_column_name].shift(2),
+    _df_data['LongHigherHighHigherLow'] = np.where(_df_data[_str_low_price_column_name].shift(1) < _df_data[_str_low_price_column_name],
                                             'LowerLow',
                                             _df_data['LongHigherHighHigherLow'])
     
     
-    _df_data['ShortLowerHighLowerLow'] = np.where(_df_data[_str_high_price_column_name ].shift(1) > _df_data[_str_high_price_column_name ].shift(2),
+    _df_data['ShortLowerHighLowerLow'] = np.where(_df_data[_str_high_price_column_name ].shift(1) > _df_data[_str_high_price_column_name ],
                                             'HigherHigh',
                                             _df_data['ShortLowerHighLowerLow'])
     
-    df_fx['ShortLowerHighLowerLow'] = np.where(_df_data[_str_high_price_column_name ].shift(1) < _df_data[_str_high_price_column_name ].shift(2),
+    _df_data['ShortLowerHighLowerLow'] = np.where(_df_data[_str_high_price_column_name ].shift(1) < _df_data[_str_high_price_column_name ],
                                             'LowerHigh',
                                             _df_data['ShortLowerHighLowerLow'])
     
@@ -120,6 +118,13 @@ def TRAILING_STOPLOSS( _nparray_high_low = None,
                        _nparray_stoploss = None, 
                        _nparray_trade_direction = None):
     """
+    Description:
+    ------
+    
+    
+    Parameters:
+    ------
+    
     _nparray_high_low: Should contain
     _nparray_stoploss: Contains a floating point
     _nparray_trade_direction: Should contain Long and Short
@@ -128,17 +133,32 @@ def TRAILING_STOPLOSS( _nparray_high_low = None,
     """
 
 
-                      
+    _nparray_stoploss_trailing = []                  
     for _idx, _hl in enumerate(_nparray_high_low):
         #Modify only the succeding stoploss after the first one.
         if _idx > 0:
             if _nparray_trade_direction== 'Long':
+                print(_hl)
+                print(_nparray_stoploss_trailing)
+                print(f"_idx {_idx}")
+                print(_nparray_stoploss)
                 if _hl == 'LowerLow':
-                    _nparray_stoploss[_idx] = _nparray_stoploss[_idx - 1]
+                    if len(_nparray_stoploss_trailing) > 0:
+                        _nparray_stoploss_trailing.append(_nparray_stoploss_trailing[_idx - 2])
+                    else:
+                        _nparray_stoploss_trailing.append(_nparray_stoploss[_idx])
+                else:
+                    _nparray_stoploss_trailing.append(_nparray_stoploss[_idx])
                     
             elif _nparray_trade_direction == 'Short':
                 if _hl == 'HigherHigh':
-                    _nparray_stoploss[_idx] = _nparray_stoploss[_idx - 1]
+                    if len(_nparray_stoploss_trailing) > 0:
+                        _nparray_stoploss_trailing.append(_nparray_stoploss_trailing[_idx - 2])
+                    else:
+                        _nparray_stoploss_trailing.append(_nparray_stoploss[_idx])
+                else:
+                    _nparray_stoploss_trailing.append(_nparray_stoploss[_idx])
+                    
     return _nparray_stoploss
 
 
@@ -172,6 +192,9 @@ def GET_EXIT_PRICE_BASED_ON_TRAILING_STOP(_df_data = None,
         _future_low = _df_data[_str_low_price_column_name].ffill()[_row_num : _row_lenght]
         _future_high = _df_data[_str_high_price_column_name].ffill()[_row_num : _row_lenght]
         
+        _ShortStopLossRelativetoOpenPrice = _df_data[_str_column_name_ShortStopLossRelativetoOpenPrice][_row_num ]
+        _LongStopLossRelativetoOpenPrice = _df_data[_str_column_name_LongStopLossRelativetoOpenPrice][_row_num ]
+        
         
         ############ need to fix ##################
         
@@ -179,14 +202,44 @@ def GET_EXIT_PRICE_BASED_ON_TRAILING_STOP(_df_data = None,
             _long_trailing_stoploss = TRAILING_STOPLOSS(_nparray_high_low = np.array(_future_long_higher_low), 
                                                             _nparray_stoploss = np.array(_future_long_stoploss), 
                                                             _nparray_trade_direction = _trade_direction)
+########################## array vs single value to be resolved ####################
+
+            """
+            print(f'_future_low: {type(_future_low)}')
+            print(f'_long_trailing_stoploss: {type(_long_trailing_stoploss)}')
+            print(f'_future_low: {_future_low}')
+            print(f'_long_trailing_stoploss: {_long_trailing_stoploss}')
+            print((_future_low <= _long_trailing_stoploss))
+            print((list(np.array(_future_low) <= _LongStopLossRelativetoOpenPrice)))
+            _condition = np.where(  (_future_low <= _long_trailing_stoploss) or (list(np.array(_future_low) <= _LongStopLossRelativetoOpenPrice)) ,
+                                    True,
+                                    False)
+                                    
+            """
             
-            _condition = np.where(  _future_low <= _long_trailing_stoploss,
+            print(f'_future_low: {type(_future_low)}')
+            print(f'_long_trailing_stoploss: {type(_long_trailing_stoploss)}')
+            print(f'_future_low: {_future_low}')
+            print(f'_long_trailing_stoploss: {_long_trailing_stoploss}')
+            
+            print(list(_future_low <= _long_trailing_stoploss))
+            print((list(np.array(_future_low) <= _LongStopLossRelativetoOpenPrice)))
+            
+            '''
+            _condition = np.where(  (list(_future_low <= _long_trailing_stoploss))  or (list(np.array(_future_low) <= _LongStopLossRelativetoOpenPrice)),
+                                    True,
+                                    False)
+            '''
+            _condition = np.where(  (list(_future_low <= _long_trailing_stoploss)) ,
                                     True,
                                     False)
             
-            try:
+            
+            try: 
+            
                 _long_trailing_exit_price = _long_trailing_stoploss[_condition][0]
                 _long_trailing_exit_date = _future_long_stoploss.index[_condition][0]
+               
             except:
                 _long_trailing_exit_price = np.nan
                 _long_trailing_exit_date = np.nan
@@ -196,7 +249,12 @@ def GET_EXIT_PRICE_BASED_ON_TRAILING_STOP(_df_data = None,
                                                              _nparray_stoploss = np.array(_future_short_stoploss), 
                                                              _nparray_trade_direction = _trade_direction)
             
-            _condition = np.where( _future_high >= _short_trailing_stoploss,
+            '''
+            _condition = np.where( (list(_future_high >= _short_trailing_stoploss)) or (list(np.array(_future_low) <= _ShortStopLossRelativetoOpenPrice)),
+                                    True,
+                                    False)
+            '''
+            _condition = np.where( (list(_future_high >= _short_trailing_stoploss)) ,
                                     True,
                                     False)
             try:
@@ -222,43 +280,6 @@ def GET_EXIT_PRICE_BASED_ON_TRAILING_STOP(_df_data = None,
             _df_data['TrailingStoplossExitPrice'][_row_num] = _short_trailing_exit_price
             _df_data['TrailingExitStopLossDate'][_row_num] = _short_trailing_exit_date
         
-    return _df_data
-
-#%%
-def GENERATE_HIGHER_HIGH_LOWER_LOW_COLUMN(_df_data = None,
-                                        _str_high_price_column_name : (str) = None,
-                                        _str_low_price_column_name : (str) = None
-                                        ):
-    """
-    Add column for Higher High and Lower low 1 period lag
-    """
-    
-    
-    _df_data['LongHigherHighHigherLow'] = np.nan
-    _df_data['ShortLowerHighLowerLow'] = np.nan
-    
-    _df_data['LongHigherHighHigherLow'] = np.where(_df_data[_str_low_price_column_name].shift(1) > _df_data[_str_low_price_column_name].shift(2),
-                                            'HigherLow',
-                                            _df_data['LongHigherHighHigherLow'])
-    
-    _df_data['LongHigherHighHigherLow'] = np.where(_df_data[_str_low_price_column_name].shift(1) < _df_data[_str_low_price_column_name].shift(2),
-                                            'LowerLow',
-                                            _df_data['LongHigherHighHigherLow'])
-    
-    
-    _df_data['ShortLowerHighLowerLow'] = np.where(_df_data[_str_high_price_column_name].shift(1) > _df_data[_str_low_price_column_name].shift(2),
-                                            'HigherHigh',
-                                            _df_data['ShortLowerHighLowerLow'])
-    
-    _df_data['ShortLowerHighLowerLow'] = np.where(_df_data[_str_high_price_column_name].shift(1) < _df_data[_str_high_price_column_name].shift(2),
-                                            'LowerHigh',
-                                            _df_data['ShortLowerHighLowerLow'])
-    
-    
-    _columns = ['LongHigherHighHigherLow','ShortLowerHighLowerLow']
-    
-    _df_data[_columns] = _df_data[_columns].mask(_df_data == 'nan', np.nan).ffill()
-    
     return _df_data
 
 
@@ -360,7 +381,8 @@ def GENERATE_RANDOM_TRADE_DIRECTION(_df_data = None):
     df_fx = _df_data.copy()
     
 
-    df_fx['TradeDirection'] = [random.randint(0, 2) for _ in range(df_fx.shape[0])]
+    np.random.seed(1)
+    df_fx['TradeDirection'] = np.random.randint(3, size=df_fx.shape[0])
     
     df_fx['TradeDirection'] = np.where(df_fx['TradeDirection'] == 0,
                                     'Short',
@@ -376,6 +398,38 @@ def GENERATE_RANDOM_TRADE_DIRECTION(_df_data = None):
     
     return pd.Series(df_fx['TradeDirection'])
     
+#%% Generage fuuture Open High Low Close for checking puposes
+
+def GENERATE_FUTURE_OPEN_HIGH_LOW_CLOSE_DATE_COLUMN(df_data = None,
+                                                    str_open_price_column_name = None,
+                                                    str_high_price_column_name = None,
+                                                    str_low_price_column_name = None,
+                                                    str_close_price_column_name = None,
+                                                    str_date_column_name = None):
+    df_data['FutureDate'] = pd.NA
+    df_data['FutureOpenPrice'] = pd.NA
+    df_data['FutureHighPrice'] = pd.NA
+    df_data['FutureLowPrice'] = pd.NA
+    df_data['FutureClosePrice'] = pd.NA
+    
+    int_total_row  = df_data.shape[0]
+    
+    for int_row_number in range(int_total_row):
+        list_future_date = df_data[str_date_column_name].astype(str)[int_row_number : int_total_row]
+        list_future_open_price = df_data[str_open_price_column_name][int_row_number : int_total_row]
+        list_future_high_price = df_data[str_high_price_column_name][int_row_number : int_total_row]
+        list_future_low_price = df_data[str_low_price_column_name][int_row_number : int_total_row]
+        list_future_close_price = df_data[str_close_price_column_name][int_row_number : int_total_row]
+        
+        df_data['FutureDate'][int_row_number] = np.array(list_future_date).astype(object)
+        df_data['FutureOpenPrice'][int_row_number] = np.array(list_future_open_price).astype(object)
+        df_data['FutureHighPrice'][int_row_number] = np.array(list_future_high_price).astype(object)
+        df_data['FutureLowPrice'][int_row_number] = np.array(list_future_low_price).astype(object)
+        df_data['FutureClosePrice'][int_row_number] = np.array(list_future_close_price).astype(object)
+        
+        
+    return df_data
+
 #%% Main function
 
 def _func_get_exit_price(_df_data = None,
@@ -385,7 +439,9 @@ def _func_get_exit_price(_df_data = None,
                         _str_close_price_column_name = None,
                         _str_stoploss_rate_column_name = None,
                         _str_takeprofit_rate_column_name = None,
-                        _str_trade_direction_column_name = None):
+                        _str_trade_direction_column_name = None,
+                        _str_column_name_LongStopLossRelativetoOpenPrice = None,
+                        _str_column_name_ShortStopLossRelativetoOpenPrice = None):
 
     
     _df_data['TakeProfitPrice'] = GENERATE_FIX_TAKE_PROFIT_PRICE(  _df_data = _df_data,
@@ -413,11 +469,11 @@ def _func_get_exit_price(_df_data = None,
     #%% Get exit price based on trailing stop
 
     _df_data = GET_EXIT_PRICE_BASED_ON_TRAILING_STOP(_df_data = _df_data,
+                                                     _str_column_name_LongStopLossRelativetoOpenPrice = 'LongStopLossRelativetoOpenPrice',
+                                                     _str_column_name_ShortStopLossRelativetoOpenPrice = 'ShortStopLossRelativetoOpenPrice',
                                                     _str_high_price_column_name   = 'High',
                                                     _str_low_price_column_name  = 'Low',
-                                                    _str_trade_direction_column_name  = 'TradeDirection',
-                                                    _str_column_name_LongStopLossRelativetoOpenPrice = 'LongStopLossRelativetoOpenPrice',
-                                                    _str_column_name_ShortStopLossRelativetoOpenPrice = 'ShortStopLossRelativetoOpenPrice')
+                                                    _str_trade_direction_column_name  = 'TradeDirection')
     
     
     #%% Identify Static Take Profit Hit Date
@@ -438,11 +494,15 @@ def _func_get_exit_price(_df_data = None,
                                         _str_column_name_TrailingStoplossExitPrice = 'TrailingStoplossExitPrice')
 
     
-    _df_data = _df_data.drop(columns = ['LongHigherHighHigherLow',
-                                        'ShortLowerHighLowerLow',
-                                        'TrailingHighLowDirection',
-                                        'FutureStopLossPrice', 'TrailingStopLoss'], 
-                             axis = 1)
+    _df_data = GENERATE_FUTURE_OPEN_HIGH_LOW_CLOSE_DATE_COLUMN(df_data = _df_data.reset_index(),
+                                                                str_open_price_column_name = 'Open',
+                                                                str_high_price_column_name = 'High',
+                                                                str_low_price_column_name = 'Low',
+                                                                str_close_price_column_name = 'Close',
+                                                                str_date_column_name = 'DateTime')
+    
+    _df_data['DateTime'] = _df_data['DateTime'].astype('datetime64[ns]')
+    _df_data = _df_data.set_index('DateTime')
     
     return _df_data
 
@@ -452,32 +512,34 @@ def _func_get_exit_price(_df_data = None,
 
 if __name__ == '__main__':
     #%% Download data
-    _df_data = etl._function_extract(_str_valuedate_start = '1/1/2010',
-                                     _str_valuedate_end = '12/31/2010',
-                                     _str_resample_frequency = 'D')
+    df_data = etl._function_extract(_str_valuedate_start = '1/1/2018',
+                                     _str_valuedate_end = '12/31/2018',
+                                     _str_resample_frequency = 'W')
     
     
     #%% Create a simulated trade based on random number generation between 0 & 2
-    _df_data['TradeDirection'] = GENERATE_RANDOM_TRADE_DIRECTION(_df_data = _df_data)
+    df_data['TradeDirection'] = GENERATE_RANDOM_TRADE_DIRECTION(_df_data = df_data)
     
     
     #%% Set the take profit and stoploss rate
-    _df_data['TakeProfitRate'] = 0.02
-    _df_data['StoplossRate'] = 0.01
+    df_data['TakeProfitRate'] = 0.02
+    df_data['StoplossRate'] = 0.01
     
 
     #%% Generate exit price
-    _df_data = _func_get_exit_price(_df_data = _df_data,
+    df_data = _func_get_exit_price(_df_data = df_data,
                                     _str_open_price_column_name = 'Open',
                                     _str_high_price_column_name = 'High',
                                     _str_low_price_column_name = 'Low',
                                     _str_close_price_column_name = 'Close',
                                     _str_stoploss_rate_column_name = 'StoplossRate',
                                     _str_takeprofit_rate_column_name = 'TakeProfitRate',
-                                    _str_trade_direction_column_name = 'TradeDirection') 
+                                    _str_trade_direction_column_name = 'TradeDirection',
+                                    _str_column_name_LongStopLossRelativetoOpenPrice = 'LongStopLossRelativetoOpenPrice',
+                                    _str_column_name_ShortStopLossRelativetoOpenPrice = 'ShortStopLossRelativetoOpenPrice') 
 
-    
-    _df_data.to_csv('Output.csv')
+    df_data.to_csv('Output.csv')
+    df_data = df_data.fillna(np.nan)
 
     #%% Create a plotly plot that shows the fx price together with the volatility
 
@@ -485,28 +547,28 @@ if __name__ == '__main__':
 
 
     _obj_fig.add_trace(go.Candlestick(
-                                        x = _df_data.index,
-                                        open = _df_data.Open,
-                                        high = _df_data.High,
-                                        low = _df_data.Low,
-                                        close = _df_data.Close
+                                        x = df_data.index,
+                                        open = df_data.Open,
+                                        high = df_data.High,
+                                        low = df_data.Low,
+                                        close = df_data.Close
                                         ),
                         row = 1,
                         col=1
                         )
 
 
-    for _int_row_number in range(_df_data.shape[0]):
+    for _int_row_number in range(df_data.shape[0]):
         
 
-        _str_trade_direction = _df_data['TradeDirection'][_int_row_number]
+        _str_trade_direction = df_data['TradeDirection'][_int_row_number]
         
         if ( _str_trade_direction == 'Long' or _str_trade_direction == 'Short'):
             
-            _date_x_axis_head = _df_data['ExitDate'][_int_row_number]
-            _int_y_axis_head = _df_data['ExitPrice'][_int_row_number]
-            _date_x_axis_tail = _df_data.index[_int_row_number]
-            _int_y_axis_tail = _df_data['Open'][_int_row_number]
+            _date_x_axis_head = df_data['ExitDate'][_int_row_number]
+            _int_y_axis_head = df_data['ExitPrice'][_int_row_number]
+            _date_x_axis_tail = df_data.index[_int_row_number]
+            _int_y_axis_tail = df_data['Open'][_int_row_number]
             
             
             
@@ -515,29 +577,9 @@ if __name__ == '__main__':
             print(f"_date_x_axis_tail {_date_x_axis_tail}")
             print(f"_int_y_axis_tail {_int_y_axis_tail}")
 
-            if _str_trade_direction == 'Long' and _int_y_axis_tail > 0  and _int_y_axis_head != np.nan:
-                _obj_fig.add_annotation(
-                                        x=_date_x_axis_head,  # arrows' head
-                                        y=_int_y_axis_head,  # arrows' head
-                                        ax=_date_x_axis_tail,  # arrows' tail
-                                        ay=_int_y_axis_tail,  # arrows' tail
-                                        xref='x',
-                                        yref='y',
-                                        axref='x',
-                                        ayref='y',
-                                        text='',  # if you want only the arrow
-                                        showarrow=True,
-                                        arrowhead=3,
-                                        arrowsize=2,
-                                        arrowwidth=1,
-                                        arrowcolor=  'green' 
-                                        )
-                
-                
-            
-                
-            elif _str_trade_direction == 'Short' and _int_y_axis_tail > 0 and _int_y_axis_head != np.nan:
-                _obj_fig.add_annotation(
+            if _int_y_axis_head > 0 and _int_y_axis_tail > 0:
+                if _str_trade_direction == 'Long':
+                    _obj_fig.add_annotation(
                                             x=_date_x_axis_head,  # arrows' head
                                             y=_int_y_axis_head,  # arrows' head
                                             ax=_date_x_axis_tail,  # arrows' tail
@@ -551,26 +593,43 @@ if __name__ == '__main__':
                                             arrowhead=3,
                                             arrowsize=2,
                                             arrowwidth=1,
-                                            arrowcolor=  'red' 
+                                            arrowcolor=  'green' 
                                             )
+                elif _str_trade_direction == 'Short' and _int_y_axis_tail > 0 and _int_y_axis_head != np.nan:
+                    _obj_fig.add_annotation(
+                                                x=_date_x_axis_head,  # arrows' head
+                                                y=_int_y_axis_head,  # arrows' head
+                                                ax=_date_x_axis_tail,  # arrows' tail
+                                                ay=_int_y_axis_tail,  # arrows' tail
+                                                xref='x',
+                                                yref='y',
+                                                axref='x',
+                                                ayref='y',
+                                                text='',  # if you want only the arrow
+                                                showarrow=True,
+                                                arrowhead=3,
+                                                arrowsize=2,
+                                                arrowwidth=1,
+                                                arrowcolor=  'red' 
+                                                )
                 
     
-    _df_data['StoplossPrice'] = np.where(_df_data['TradeDirection'] == 'Long',
-                                         _df_data['LongStopLossRelativetoOpenPrice'],
-                                         np.where(_df_data['TradeDirection'] == 'Short',
-                                                  _df_data['ShortStopLossRelativetoOpenPrice'],
+    df_data['StoplossPrice'] = np.where(df_data['TradeDirection'] == 'Long',
+                                         df_data['LongStopLossRelativetoOpenPrice'],
+                                         np.where(df_data['TradeDirection'] == 'Short',
+                                                  df_data['ShortStopLossRelativetoOpenPrice'],
                                                   np.nan
                                                 )
                                         )
 
-    _obj_fig.add_trace(go.Scatter(x=_df_data.index, 
-                                    y=_df_data['StoplossPrice'],
+    _obj_fig.add_trace(go.Scatter(x=df_data.index, 
+                                    y=df_data['StoplossPrice'],
                                     mode='markers',
                                     name='markers')
                         )
     
-    _obj_fig.add_trace(go.Scatter(x=_df_data.index, 
-                                y=_df_data['TakeProfitPrice'],
+    _obj_fig.add_trace(go.Scatter(x=df_data.index, 
+                                y=df_data['TakeProfitPrice'],
                                 mode='markers',
                                 name='markers')
                         )
@@ -582,4 +641,53 @@ if __name__ == '__main__':
     pio.show(_obj_fig)
 
 
+# %%
+
+def PLOT_SINGLE_TRADE_TRAILING_STOPLOSS_AND_TAKEPROFIT(df_data = None):
+    
+    obj_fig = make_subplots(rows = 1, cols=1, shared_xaxes=True)
+    obj_fig.add_trace(go.Candlestick(
+                                        x = df_data.FutureDate,
+                                        open = df_data.FutureOpenPrice,
+                                        high = df_data.FutureHighPrice,
+                                        low = df_data.FutureLowPrice,
+                                        close = df_data.FutureClosePrice
+                                        ),
+                        row = 1,
+                        col=1
+                        )
+    
+    obj_fig.add_trace(go.Scatter(x=df_data.FutureDate, 
+                                y=df_data.TrailingStopLoss,
+                                mode='lines+markers',
+                                name='TrailingStopLoss')
+                    )
+    
+    obj_fig.add_trace(go.Scatter(x=df_data.FutureDate, 
+                                y=df_data.FutureStopLossPrice,
+                                mode='lines+markers',
+                                name='FutureStopLossPrice')
+                    )
+    
+    obj_fig.update_layout(xaxis_rangeslider_visible=False)
+
+    pio.renderers.default = 'browser'
+
+    return pio.show(obj_fig)
+
+
+# %%
+
+
+# %% test if the trailing stop loss are correct
+
+str_date = '2018-02-04'
+df_temp = df_data.loc[str_date:str_date,:]
+
+df_temp2 = df_temp.apply(lambda x: x.explode() if x.name in ['TrailingHighLowDirection','FutureStopLossPrice','TrailingStopLoss','FutureOpenPrice','FutureHighPrice','FutureLowPrice','FutureClosePrice','FutureDate'] else x)
+df_temp2['FutureDate'] = df_temp2['FutureDate'].astype('datetime64[ns]')
+
+PLOT_SINGLE_TRADE_TRAILING_STOPLOSS_AND_TAKEPROFIT(df_data = df_temp2)
+
+print(df_temp2.head(10))
 # %%
