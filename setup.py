@@ -10,7 +10,7 @@ classifiers = [
 
 setup(
 name = 'trading_returns_analysis',
-version ='1.0.0',
+version ='1.0.1',
 description = 'trading_returns _analysis modules contains function to analyze a timeseries of trading returns. Such as, cumulative returns monthly returns, etc.',
 url= 'https://github.com/Iankfc/trading_returns_analysis',
 author='ece',
