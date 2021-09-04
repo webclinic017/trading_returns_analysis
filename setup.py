@@ -28,5 +28,5 @@ install_requires=[  'numpy==1.21.1',
                     'plotly==5.1.0',
                     'pandas==1.2.5',
                     'asset_price_etl==0.1.dev1+g035dd12.d20210903',
-                    'trading_exit_price==1.0.3.dev0+g790298a.d20210904']
+                    'trading_exit_price==1.1.2.dev0+ge177426.d20210904']
 )

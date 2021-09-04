@@ -63,6 +63,7 @@ setup.py
 __pycache__/__init__.cpython-38.pyc
 __pycache__/__init__.cpython-39.pyc
 dist/trading_returns_analysis-0.1.dev14+gd0ccbbf.d20210904.tar.gz
+dist/trading_returns_analysis-1.0.1.dev0+g5075d21.d20210904.tar.gz
 trading_returns_analysis/__init__.py
 trading_returns_analysis.egg-info/PKG-INFO
 trading_returns_analysis.egg-info/SOURCES.txt
