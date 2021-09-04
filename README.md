@@ -45,6 +45,7 @@ To use the module in a pythone terminal, import the module just like other pytho
 
 ### Python Terminal
 ```
+from asset_price_etl import etl_fx_histadata_001 as etl
 import trading_returns_analysis as tra
 import trading_exit_price as tep
 from trading_direction import func_list_str_generate_random_trades as td
