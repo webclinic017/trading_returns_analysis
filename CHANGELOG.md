@@ -1,8 +1,10 @@
 
 # Change Log
 All notable changes to this project will be documented in this file.
- 
-## v1.0.1 - 2021-09-09
+## v1.2.0 - 2021-09-13
+
+  Add feature - Apply kelly criterion position in usd adjustment
+## v1.1.1 - 2021-09-09
 
   Add feature - Addition of cumulative balance given an initial balance and risk per trade
 ## v1.0.1 - 2021-09-09

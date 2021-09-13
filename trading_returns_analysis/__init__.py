@@ -224,11 +224,14 @@ def func_pdseries_int_cumulative_balance_usd(df_data = None,
                                                 int_initial_balance_in_usd = None,
                                                 float_percent_risk_per_trade = None,
                                                 str_SingleTradePercentageChange_column_name = None,
-                                                str_StoplossRate_column_name = None):
+                                                str_StoplossRate_column_name = None,
+                                                str_KellyCriterionCumulative_column_name = None,
+                                                bool_appy_kelly_criterion_True_or_False = None,
+                                                float_kelly_criterion_multiplier = None):
 
 
     df_data = df_data.copy()
-    df_data = df_data[[str_StoplossRate_column_name,str_SingleTradePercentageChange_column_name]]
+    df_data = df_data[[str_StoplossRate_column_name,str_SingleTradePercentageChange_column_name,str_KellyCriterionCumulative_column_name]]
 
     df_data['CumulativeBalance'] = (int_initial_balance_in_usd * float_percent_risk_per_trade) / df_data[str_StoplossRate_column_name] *    df_data[str_SingleTradePercentageChange_column_name]
 
@@ -237,6 +240,7 @@ def func_pdseries_int_cumulative_balance_usd(df_data = None,
     for int_row in range(df_data.shape[0]):
         float_stoploss_rate = df_data[str_StoplossRate_column_name][int_row]
         float_exit_rate = df_data[str_SingleTradePercentageChange_column_name][int_row]
+        float_kelly_criterion = df_data[str_KellyCriterionCumulative_column_name][int_row]
         
         
         if int_row == 0:
@@ -244,7 +248,14 @@ def func_pdseries_int_cumulative_balance_usd(df_data = None,
         else:
             int_previous_balance = df_data.CumulativeBalance[int_row - 1]
         
-        df_data.CumulativeBalance[int_row] = ( (int_previous_balance * float_percent_risk_per_trade) 
+        if bool_appy_kelly_criterion_True_or_False == True:
+            float_kelly_criterion = float_kelly_criterion * float_kelly_criterion_multiplier
+            float_kelly_criterion = 1 + float_kelly_criterion
+        else:
+            float_kelly_criterion = 1
+        
+        
+        df_data.CumulativeBalance[int_row] = ( (int_previous_balance * float_percent_risk_per_trade * float_kelly_criterion) 
                                             / float_stoploss_rate
                                             * float_exit_rate 
                                             ) + int_previous_balance
@@ -253,14 +264,16 @@ def func_pdseries_int_cumulative_balance_usd(df_data = None,
         
 #%%
 
-def func_df_generate_returns_analysis(df_data = None,
-                                str_column_trade_entry_price_column_name = None,
-                                str_column_trade_direction_column_name = None,
-                                str_column_trade_exit_price_column_name = None,
-                                str_column_trade_exit_date_column_name = None,
-                                int_initial_balance_in_usd = None,
-                                float_percent_risk_per_trade = None
-                            ):
+def func_df_generate_returns_analysis(  df_data = None,
+                                        str_column_trade_entry_price_column_name = None,
+                                        str_column_trade_direction_column_name = None,
+                                        str_column_trade_exit_price_column_name = None,
+                                        str_column_trade_exit_date_column_name = None,
+                                        int_initial_balance_in_usd = None,
+                                        float_percent_risk_per_trade = None,
+                                        bool_appy_kelly_criterion_True_or_False = None,
+                                        float_kelly_criterion_multiplier = None
+                                     ):
     
     df_data = CLOSED_TRADES_PERCENTAGE_CHANGE(df_data = df_data,
                                                 str_column_trade_entry_price_column_name = str_column_trade_entry_price_column_name,
@@ -288,7 +301,10 @@ def func_df_generate_returns_analysis(df_data = None,
                                                                                 int_initial_balance_in_usd = int_initial_balance_in_usd,
                                                                                 float_percent_risk_per_trade = float_percent_risk_per_trade,
                                                                                 str_SingleTradePercentageChange_column_name = 'SingleTradePercentageChange',
-                                                                                str_StoplossRate_column_name = 'StoplossRate')
+                                                                                str_StoplossRate_column_name = 'StoplossRate',
+                                                                                str_KellyCriterionCumulative_column_name = 'KellyCriterionCumulative',
+                                                                                bool_appy_kelly_criterion_True_or_False = bool_appy_kelly_criterion_True_or_False,
+                                                                                float_kelly_criterion_multiplier = float_kelly_criterion_multiplier)
     
     return df_data
 
@@ -374,7 +390,7 @@ if __name__ == '__main__':
 
     
     df_data = etl._function_extract(_str_valuedate_start = '1/1/2018',
-                                     _str_valuedate_end = '12/31/2020',
+                                     _str_valuedate_end = '12/31/2018',
                                      _str_resample_frequency = 'D',
                                      str_currency_pair = 'EURUSD')
     
@@ -412,7 +428,9 @@ if __name__ == '__main__':
                                                 str_column_trade_exit_price_column_name = 'ExitPrice',
                                                 str_column_trade_exit_date_column_name = 'ExitDate',
                                                 int_initial_balance_in_usd = 10_000,
-                                                float_percent_risk_per_trade = 0.01
+                                                float_percent_risk_per_trade = 0.01,
+                                                bool_appy_kelly_criterion_True_or_False = True,
+                                                float_kelly_criterion_multiplier = 0.5
                                                 )
     
     
