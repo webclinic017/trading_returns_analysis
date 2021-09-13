@@ -189,6 +189,10 @@ def CLOSED_TRADES_PERCENTAGE_CHANGE(df_data = None,
                                                    df_data['SingleTradePercentageChange'] * -1,
                                                    df_data['SingleTradePercentageChange'])
     
+    df_data['SingleTradePercentageChange'] = np.where(np.isnan(df_data['SingleTradePercentageChange']),
+                                                      0,
+                                                      df_data['SingleTradePercentageChange'])
+    
     # Generate Cumulative Return
     
     df_data['CumulativeReturn'] = df_data['SingleTradePercentageChange'].expanding().apply(lambda x: np.prod(1+x)-1)
@@ -215,7 +219,37 @@ def func_list_int_generate_trade_duration(df_data = None,
     
     return list_int_generate_trade_duration
 
+#%%
+def func_pdseries_int_cumulative_balance_usd(df_data = None,
+                                                int_initial_balance_in_usd = None,
+                                                float_percent_risk_per_trade = None,
+                                                str_SingleTradePercentageChange_column_name = None,
+                                                str_StoplossRate_column_name = None):
 
+
+    df_data = df_data.copy()
+    df_data = df_data[[str_StoplossRate_column_name,str_SingleTradePercentageChange_column_name]]
+
+    df_data['CumulativeBalance'] = (int_initial_balance_in_usd * float_percent_risk_per_trade) / df_data[str_StoplossRate_column_name] *    df_data[str_SingleTradePercentageChange_column_name]
+
+    df_data['CumulativeBalance'] = np.nan
+
+    for int_row in range(df_data.shape[0]):
+        float_stoploss_rate = df_data[str_StoplossRate_column_name][int_row]
+        float_exit_rate = df_data[str_SingleTradePercentageChange_column_name][int_row]
+        
+        
+        if int_row == 0:
+            int_previous_balance = int_initial_balance_in_usd
+        else:
+            int_previous_balance = df_data.CumulativeBalance[int_row - 1]
+        
+        df_data.CumulativeBalance[int_row] = ( (int_previous_balance * float_percent_risk_per_trade) 
+                                            / float_stoploss_rate
+                                            * float_exit_rate 
+                                            ) + int_previous_balance
+        
+    return pd.Series(df_data.CumulativeBalance)
         
 #%%
 
@@ -223,7 +257,9 @@ def func_df_generate_returns_analysis(df_data = None,
                                 str_column_trade_entry_price_column_name = None,
                                 str_column_trade_direction_column_name = None,
                                 str_column_trade_exit_price_column_name = None,
-                                str_column_trade_exit_date_column_name = None
+                                str_column_trade_exit_date_column_name = None,
+                                int_initial_balance_in_usd = None,
+                                float_percent_risk_per_trade = None
                             ):
     
     df_data = CLOSED_TRADES_PERCENTAGE_CHANGE(df_data = df_data,
@@ -247,6 +283,13 @@ def func_df_generate_returns_analysis(df_data = None,
     df_data['TradeDuration'] = func_list_int_generate_trade_duration(df_data = df_data,
                                                                      str_exit_date_column_name = str_column_trade_exit_date_column_name,
                                                                      str_entry_date_column_name = df_data.index.name)
+    
+    df_data['CumulativeBalanceUSD'] = func_pdseries_int_cumulative_balance_usd( df_data = df_data,
+                                                                                int_initial_balance_in_usd = int_initial_balance_in_usd,
+                                                                                float_percent_risk_per_trade = float_percent_risk_per_trade,
+                                                                                str_SingleTradePercentageChange_column_name = 'SingleTradePercentageChange',
+                                                                                str_StoplossRate_column_name = 'StoplossRate')
+    
     return df_data
 
 
@@ -256,17 +299,18 @@ def func_plotlychart_generate_chart(df_data = None,
                                     str_cumulative_win_rate_column_name = None,
                                     str_cumulative_risk_return_column_name = None,
                                     str_cumulative_kelly_criterion_column_name = None,
+                                    str_CumulativeBalanceUSD_column_name = None,
                                     bool_merge_plotly_chart_with_other_chart_True_or_False = False,
                                     class_trading_exit_price = None):
 
     
     if bool_merge_plotly_chart_with_other_chart_True_or_False == True:
         int_additional_row_plotly_chart  = 1
-        obj_fig = class_trading_exit_price.generate_plotly_chart_showing_stoploss_and_takeprofit(bool_merge_plotly_chart_with_other_chart_True_or_False = True)
+        obj_fig = class_trading_exit_price.generate_plotly_chart_showing_stoploss_and_takeprofit(bool_merge_plotly_chart_with_other_chart_True_or_False = True, int_number_of_subplots = 6)
         
     else:
         int_additional_row_plotly_chart = 0
-        obj_fig = make_subplots(rows = 4 , cols=1, shared_xaxes=True)
+        obj_fig = make_subplots(rows = 5 , cols=1, shared_xaxes=True)
     
     
     
@@ -280,10 +324,18 @@ def func_plotlychart_generate_chart(df_data = None,
                     )
 
     obj_fig.add_trace(go.Scatter(x=df_data.index, 
+                                y=df_data[str_CumulativeBalanceUSD_column_name],
+                                mode='lines',
+                                name='Cumulative Balance USD'),
+                    row = 2 + int_additional_row_plotly_chart,
+                    col = 1
+                    )
+        
+    obj_fig.add_trace(go.Scatter(x=df_data.index, 
                                 y=df_data[str_cumulative_win_rate_column_name],
                                 mode='lines',
                                 name='WinRateCumulative'),
-                    row = 2 + int_additional_row_plotly_chart,
+                    row = 3 + int_additional_row_plotly_chart,
                     col = 1
                     )
 
@@ -291,7 +343,7 @@ def func_plotlychart_generate_chart(df_data = None,
                                 y=df_data[str_cumulative_risk_return_column_name],
                                 mode='lines',
                                 name='RiskReturnCumulative'),
-                    row = 3 + int_additional_row_plotly_chart,
+                    row = 4 + int_additional_row_plotly_chart,
                     col = 1
                     )
 
@@ -299,9 +351,10 @@ def func_plotlychart_generate_chart(df_data = None,
                                 y=df_data[str_cumulative_kelly_criterion_column_name],
                                 mode='lines',
                                 name='KellyCriterionCumulative'),
-                    row = 4 + int_additional_row_plotly_chart,
+                    row = 5 + int_additional_row_plotly_chart,
                     col = 1
                     )
+    
     obj_fig.update_layout(  xaxis_rangeslider_visible=False,
                             autosize=False,
                             width=2000,
@@ -311,10 +364,7 @@ def func_plotlychart_generate_chart(df_data = None,
     
     return None
 
-# %%
-
-# %%
-
+#%%
 
 if __name__ == '__main__':
     
@@ -324,13 +374,14 @@ if __name__ == '__main__':
 
     
     df_data = etl._function_extract(_str_valuedate_start = '1/1/2018',
-                                     _str_valuedate_end = '12/7/2018',
-                                     _str_resample_frequency = 'D')
+                                     _str_valuedate_end = '12/31/2020',
+                                     _str_resample_frequency = 'D',
+                                     str_currency_pair = 'EURUSD')
     
     #%% Create a simulated trade based on random number generation between 0 & 2
     df_data['TradeDirection'] = td.func_list_str_generate_random_trades(df_data)
     
-    df_data['TakeProfitRate'] = 0.005
+    df_data['TakeProfitRate'] = 0.01
     df_data['StoplossRate'] = 0.005
     
     class_tep = tep.trading_exit_price( df_data = df_data,
@@ -345,7 +396,11 @@ if __name__ == '__main__':
                                     bool_exit_price_and_exit_date_only_True_or_False = False)
     
     df_data = class_tep.df_data
+    
 
+
+
+    #%%
     class_tep.generate_plotly_chart_showing_stoploss_and_takeprofit()
     
     class_tep.generate_plot_single_trade_trailing_stoploss_and_takeprofit(str_date = '2018-08-02')
@@ -355,14 +410,22 @@ if __name__ == '__main__':
                                                 str_column_trade_entry_price_column_name = 'Open',
                                                 str_column_trade_direction_column_name = 'TradeDirection',
                                                 str_column_trade_exit_price_column_name = 'ExitPrice',
-                                                str_column_trade_exit_date_column_name = 'ExitDate'
+                                                str_column_trade_exit_date_column_name = 'ExitDate',
+                                                int_initial_balance_in_usd = 10_000,
+                                                float_percent_risk_per_trade = 0.01
                                                 )
     
+    
+
+
+    #%%    
+        
     func_plotlychart_generate_chart(df_data = df_data,
                                     str_cumulative_return_column_name = 'CumulativeReturn',
                                     str_cumulative_win_rate_column_name = 'WinRateCumulative',
                                     str_cumulative_risk_return_column_name = 'RiskReturnCumulative',
                                     str_cumulative_kelly_criterion_column_name = 'KellyCriterionCumulative',
+                                    str_CumulativeBalanceUSD_column_name = 'CumulativeBalanceUSD',
                                     bool_merge_plotly_chart_with_other_chart_True_or_False = True,
                                     class_trading_exit_price = class_tep
                                     )

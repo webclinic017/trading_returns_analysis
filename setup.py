@@ -10,7 +10,7 @@ classifiers = [
 
 setup(
 name = 'trading_returns_analysis',
-version ='1.0.1',
+version ='1.1.1',
 description = 'trading_returns _analysis modules contains function to analyze a timeseries of trading returns. Such as, cumulative returns monthly returns, etc.',
 url= 'https://github.com/Iankfc/trading_returns_analysis',
 author='ece',
@@ -22,11 +22,14 @@ packages=find_packages(),
 use_scm_version=True,
 include_package_data=True,
 setup_requires=['setuptools_scm'],
-install_requires=[  'numpy==1.21.1',
-                    'trading_direction==1.0.2.dev0+gd8a0b66.d20210830',
-                    'scipy==1.7.1',
-                    'plotly==5.1.0',
+install_requires=   ['plotly==5.1.0',
+                    'numpy==1.21.1',
                     'pandas==1.2.5',
-                    'asset_price_etl==0.1.dev1+g035dd12.d20210903',
-                    'trading_exit_price==1.1.2.dev0+ge177426.d20210904']
+                    'packaging==20.9',
+                    'trading_direction==1.0.2.dev0+gd8a0b66.d20210830',
+                    'trading_exit_price==1.2.2.dev0+g8cf3c69.d20210913',
+                    'scipy==1.7.1',
+                    'asset_price_etl==2.0.1.dev0+ga99b82f.d20210912']
+
+
 )

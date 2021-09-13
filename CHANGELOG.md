@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
  
 ## v1.0.1 - 2021-09-09
 
+  Add feature - Addition of cumulative balance given an initial balance and risk per trade
+## v1.0.1 - 2021-09-09
+
   Fix bug - Correct versioni of dependencies, trading_exit_price
   
 
