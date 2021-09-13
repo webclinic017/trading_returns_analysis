@@ -189,9 +189,7 @@ def CLOSED_TRADES_PERCENTAGE_CHANGE(df_data = None,
                                                    df_data['SingleTradePercentageChange'] * -1,
                                                    df_data['SingleTradePercentageChange'])
     
-    df_data['SingleTradePercentageChange'] = np.where(np.isnan(df_data['SingleTradePercentageChange']),
-                                                      0,
-                                                      df_data['SingleTradePercentageChange'])
+
     
     # Generate Cumulative Return
     
@@ -232,9 +230,21 @@ def func_pdseries_int_cumulative_balance_usd(df_data = None,
 
     df_data = df_data.copy()
     df_data = df_data[[str_StoplossRate_column_name,str_SingleTradePercentageChange_column_name,str_KellyCriterionCumulative_column_name]]
-
-    df_data['CumulativeBalance'] = (int_initial_balance_in_usd * float_percent_risk_per_trade) / df_data[str_StoplossRate_column_name] *    df_data[str_SingleTradePercentageChange_column_name]
-
+    
+    df_data[str_SingleTradePercentageChange_column_name] = np.where(np.isnan(df_data[str_SingleTradePercentageChange_column_name]),
+                                                                    0,
+                                                                    df_data[str_SingleTradePercentageChange_column_name]
+                                                                    )
+    
+    df_data[str_KellyCriterionCumulative_column_name] = np.where(np.isinf(df_data[str_KellyCriterionCumulative_column_name]),
+                                                                0,
+                                                                df_data[str_KellyCriterionCumulative_column_name]
+                                                                )
+    
+    df_data[str_KellyCriterionCumulative_column_name] = np.where(df_data[str_SingleTradePercentageChange_column_name] == 0,
+                                                                0,
+                                                                df_data[str_KellyCriterionCumulative_column_name]
+                                                                )
     df_data['CumulativeBalance'] = np.nan
 
     for int_row in range(df_data.shape[0]):
@@ -430,7 +440,7 @@ if __name__ == '__main__':
                                                 int_initial_balance_in_usd = 10_000,
                                                 float_percent_risk_per_trade = 0.01,
                                                 bool_appy_kelly_criterion_True_or_False = True,
-                                                float_kelly_criterion_multiplier = 0.5
+                                                float_kelly_criterion_multiplier = 0.1
                                                 )
     
     
