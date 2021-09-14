@@ -390,6 +390,86 @@ def func_plotlychart_generate_chart(df_data = None,
     
     return None
 
+
+def func_dict_pdseries_hold_or_reverse_trade_direction_based_on_rolling_trade_return(df_data = None,
+                                                                                     str_CumulativeReturn_column_name = None,
+                                                                                    str_TradeDirection_column_name = None,
+                                                                                    str_StoplossRate_column_name = None,
+                                                                                    str_TakeProfitRate_column_name = None,
+                                                                                    bool_reverse_trade_direction_when_cumulative_return_trend_down_True_or_False = False,
+                                                                                    str_rolling_return_sampling_duration = None,
+                                                                                    bool_hold_trade_when_cumulative_return_trend_down_True_or_False = None,
+                                                                                    int_numbers_days_lag_for_to_account_future_closing_trades = 5,
+                                                                                    bool_interchange_sl_and_tp_when_cumulative_return_trend_down_True_or_False = None):
+        
+        df_data = df_data.copy()
+        
+        df_data['CumulativeReturnReverseIndicatorSMA'] = df_data.CumulativeReturn.shift(int_numbers_days_lag_for_to_account_future_closing_trades).rolling(str_rolling_return_sampling_duration).mean().fillna(0)
+        
+        if bool_hold_trade_when_cumulative_return_trend_down_True_or_False == True:
+            df_data[str_TradeDirection_column_name] = np.where(( df_data[str_CumulativeReturn_column_name] > df_data.CumulativeReturnReverseIndicatorSMA),
+                                                df_data.TradeDirection,
+                                                np.where(df_data.TradeDirection == 'Long',
+                                                        'Hold',
+                                                        np.where(df_data.TradeDirection == 'Short',
+                                                                'Hold',
+                                                                df_data.TradeDirection)
+                                                        )
+                                                )
+        elif bool_reverse_trade_direction_when_cumulative_return_trend_down_True_or_False == True:
+            df_data[str_TradeDirection_column_name] = np.where(( df_data[str_CumulativeReturn_column_name] > df_data.CumulativeReturnReverseIndicatorSMA),
+                                    df_data.TradeDirection,
+                                    np.where(df_data.TradeDirection == 'Long',
+                                            'Short',
+                                            np.where(df_data.TradeDirection == 'Short',
+                                                    'Long',
+                                                    df_data.TradeDirection)
+                                            )
+                                    )
+            
+        if bool_interchange_sl_and_tp_when_cumulative_return_trend_down_True_or_False == True:
+            df_data['TakeProfitRateTemp'] = np.where((df_data.CumulativeReturn > 0 ) & ( df_data[str_CumulativeReturn_column_name] > df_data.CumulativeReturnReverseIndicatorSMA),
+                                                df_data[str_TakeProfitRate_column_name],  
+                                                df_data[str_StoplossRate_column_name]
+                                                ) 
+            df_data['StoplossRateTemp'] = np.where((df_data.CumulativeReturn > 0 ) & ( df_data[str_CumulativeReturn_column_name] > df_data.CumulativeReturnReverseIndicatorSMA),
+                                                df_data[str_StoplossRate_column_name],  
+                                                df_data[str_TakeProfitRate_column_name]
+                                                ) 
+            
+            df_data[str_TakeProfitRate_column_name] = df_data['TakeProfitRateTemp'].copy()
+            
+            df_data[str_StoplossRate_column_name] = df_data['StoplossRateTemp'].copy()
+        
+            obj_fig = make_subplots(rows = 1 , cols=1, shared_xaxes=True)
+            obj_fig.add_trace(go.Scatter(x=df_data.index, 
+                            y=df_data['CumulativeReturn'],
+                            mode='lines',
+                            name='Cumulative Return'),
+                row = 1 ,
+                col = 1
+                )
+            obj_fig.add_trace(go.Scatter(x=df_data.index, 
+                            y=df_data['CumulativeReturnReverseIndicatorSMA'],
+                            mode='lines',
+                            name='Cumulative Return'),
+                row = 1 ,
+                col = 1
+                )
+            obj_fig.update_layout(  xaxis_rangeslider_visible=False,
+                        autosize=False,
+                        width=1000,
+                        height=500)
+            pio.renderers.default = 'browser'
+            pio.show(obj_fig)
+    
+    
+        dict_output = {'TradeDirection':df_data[str_TradeDirection_column_name],
+                       'TakeProfitRate': df_data[str_TakeProfitRate_column_name],
+                       'StoplossRate': df_data[str_StoplossRate_column_name]}
+        
+        return dict_output
+    
 #%%
 
 if __name__ == '__main__':
@@ -399,7 +479,7 @@ if __name__ == '__main__':
     from trading_direction import func_list_str_generate_random_trades as td
 
     
-    df_data = etl._function_extract(_str_valuedate_start = '1/1/2016',
+    df_data = etl._function_extract(_str_valuedate_start = '1/1/2002',
                                      _str_valuedate_end = '12/31/2020',
                                      _str_resample_frequency = 'D',
                                      str_currency_pair = 'EURUSD')
@@ -452,52 +532,22 @@ if __name__ == '__main__':
                                     bool_merge_plotly_chart_with_other_chart_True_or_False = True,
                                     class_trading_exit_price = class_tep
                                     )
+    
+    
+    dict_output = func_dict_pdseries_hold_or_reverse_trade_direction_based_on_rolling_trade_return(df_data = df_data,
+                                                                                     str_CumulativeReturn_column_name = 'CumulativeReturn',
+                                                                                    str_TradeDirection_column_name = 'TradeDirection',
+                                                                                    str_StoplossRate_column_name = 'StoplossRate',
+                                                                                    str_TakeProfitRate_column_name = 'TakeProfitRate',
+                                                                                    bool_reverse_trade_direction_when_cumulative_return_trend_down_True_or_False = False,
+                                                                                    str_rolling_return_sampling_duration = '7D',
+                                                                                    bool_hold_trade_when_cumulative_return_trend_down_True_or_False = True,
+                                                                                    int_numbers_days_lag_for_to_account_future_closing_trades = 5,
+                                                                                    bool_interchange_sl_and_tp_when_cumulative_return_trend_down_True_or_False = False)
         
-    df_data['CumulativeReturnReverseIndicatorSMA'] = df_data.CumulativeReturn.shift(5).rolling('7D').mean().fillna(0)
-    
-    df_data['TradeDirection'] = np.where(( df_data.CumulativeReturn > df_data.CumulativeReturnReverseIndicatorSMA),
-                                         df_data.TradeDirection,
-                                         np.where(df_data.TradeDirection == 'Long',
-                                                  'Hold',
-                                                  np.where(df_data.TradeDirection == 'Short',
-                                                           'Hold',
-                                                           df_data.TradeDirection)
-                                                  )
-                                         )
-    df_data['TakeProfitRateTemp'] = np.where((df_data.CumulativeReturn > 0 ) & ( df_data.CumulativeReturn > df_data.CumulativeReturnReverseIndicatorSMA),
-                                         df_data['TakeProfitRate'],  
-                                         df_data['StoplossRate']
-                                        ) 
-    df_data['StoplossRateTemp'] = np.where((df_data.CumulativeReturn > 0 ) & ( df_data.CumulativeReturn > df_data.CumulativeReturnReverseIndicatorSMA),
-                                         df_data['StoplossRate'],  
-                                         df_data['TakeProfitRate']
-                                        ) 
-    
-    df_data['TakeProfitRate'] = df_data['TakeProfitRateTemp'].copy()
-    
-    df_data['StoplossRate'] = df_data['StoplossRateTemp'].copy()
+    df_data['TradeDirection'] = dict_output['TradeDirection']
                                                                         
-    obj_fig = make_subplots(rows = 1 , cols=1, shared_xaxes=True)
-    obj_fig.add_trace(go.Scatter(x=df_data.index, 
-                        y=df_data['CumulativeReturn'],
-                        mode='lines',
-                        name='Cumulative Return'),
-            row = 1 ,
-            col = 1
-            )
-    obj_fig.add_trace(go.Scatter(x=df_data.index, 
-                        y=df_data['CumulativeReturnReverseIndicatorSMA'],
-                        mode='lines',
-                        name='Cumulative Return'),
-            row = 1 ,
-            col = 1
-            )
-    obj_fig.update_layout(  xaxis_rangeslider_visible=False,
-                    autosize=False,
-                    width=1000,
-                    height=500)
-    pio.renderers.default = 'browser'
-    pio.show(obj_fig)
+
     
     
     class_tep = tep.trading_exit_price( df_data = df_data,
