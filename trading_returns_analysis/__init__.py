@@ -399,8 +399,8 @@ if __name__ == '__main__':
     from trading_direction import func_list_str_generate_random_trades as td
 
     
-    df_data = etl._function_extract(_str_valuedate_start = '1/1/2018',
-                                     _str_valuedate_end = '12/31/2018',
+    df_data = etl._function_extract(_str_valuedate_start = '1/1/2016',
+                                     _str_valuedate_end = '12/31/2020',
                                      _str_resample_frequency = 'D',
                                      str_currency_pair = 'EURUSD')
     
@@ -443,9 +443,86 @@ if __name__ == '__main__':
                                                 float_kelly_criterion_multiplier = 0.1
                                                 )
     
+    func_plotlychart_generate_chart(df_data = df_data,
+                                    str_cumulative_return_column_name = 'CumulativeReturn',
+                                    str_cumulative_win_rate_column_name = 'WinRateCumulative',
+                                    str_cumulative_risk_return_column_name = 'RiskReturnCumulative',
+                                    str_cumulative_kelly_criterion_column_name = 'KellyCriterionCumulative',
+                                    str_CumulativeBalanceUSD_column_name = 'CumulativeBalanceUSD',
+                                    bool_merge_plotly_chart_with_other_chart_True_or_False = True,
+                                    class_trading_exit_price = class_tep
+                                    )
+        
+    df_data['CumulativeReturnReverseIndicatorSMA'] = df_data.CumulativeReturn.shift(5).rolling('7D').mean().fillna(0)
     
-
-
+    df_data['TradeDirection'] = np.where(( df_data.CumulativeReturn > df_data.CumulativeReturnReverseIndicatorSMA),
+                                         df_data.TradeDirection,
+                                         np.where(df_data.TradeDirection == 'Long',
+                                                  'Hold',
+                                                  np.where(df_data.TradeDirection == 'Short',
+                                                           'Hold',
+                                                           df_data.TradeDirection)
+                                                  )
+                                         )
+    df_data['TakeProfitRateTemp'] = np.where((df_data.CumulativeReturn > 0 ) & ( df_data.CumulativeReturn > df_data.CumulativeReturnReverseIndicatorSMA),
+                                         df_data['TakeProfitRate'],  
+                                         df_data['StoplossRate']
+                                        ) 
+    df_data['StoplossRateTemp'] = np.where((df_data.CumulativeReturn > 0 ) & ( df_data.CumulativeReturn > df_data.CumulativeReturnReverseIndicatorSMA),
+                                         df_data['StoplossRate'],  
+                                         df_data['TakeProfitRate']
+                                        ) 
+    
+    df_data['TakeProfitRate'] = df_data['TakeProfitRateTemp'].copy()
+    
+    df_data['StoplossRate'] = df_data['StoplossRateTemp'].copy()
+                                                                        
+    obj_fig = make_subplots(rows = 1 , cols=1, shared_xaxes=True)
+    obj_fig.add_trace(go.Scatter(x=df_data.index, 
+                        y=df_data['CumulativeReturn'],
+                        mode='lines',
+                        name='Cumulative Return'),
+            row = 1 ,
+            col = 1
+            )
+    obj_fig.add_trace(go.Scatter(x=df_data.index, 
+                        y=df_data['CumulativeReturnReverseIndicatorSMA'],
+                        mode='lines',
+                        name='Cumulative Return'),
+            row = 1 ,
+            col = 1
+            )
+    obj_fig.update_layout(  xaxis_rangeslider_visible=False,
+                    autosize=False,
+                    width=1000,
+                    height=500)
+    pio.renderers.default = 'browser'
+    pio.show(obj_fig)
+    
+    
+    class_tep = tep.trading_exit_price( df_data = df_data,
+                                    str_open_price_column_name = 'Open',
+                                    str_high_price_column_name = 'High',
+                                    str_low_price_column_name = 'Low',
+                                    str_close_price_column_name = 'Close',
+                                    str_stoploss_rate_column_name = 'StoplossRate',
+                                    str_takeprofit_rate_column_name = 'TakeProfitRate',
+                                    str_trade_direction_column_name = 'TradeDirection',
+                                    str_stoploss_fix_or_variable = 'fix',
+                                    bool_exit_price_and_exit_date_only_True_or_False = False)
+    
+    df_data = class_tep.df_data
+    
+    df_data = func_df_generate_returns_analysis(df_data = df_data,
+                                                str_column_trade_entry_price_column_name = 'Open',
+                                                str_column_trade_direction_column_name = 'TradeDirection',
+                                                str_column_trade_exit_price_column_name = 'ExitPrice',
+                                                str_column_trade_exit_date_column_name = 'ExitDate',
+                                                int_initial_balance_in_usd = 10_000,
+                                                float_percent_risk_per_trade = 0.01,
+                                                bool_appy_kelly_criterion_True_or_False = True,
+                                                float_kelly_criterion_multiplier = 0.1
+                                                )
     #%%    
         
     func_plotlychart_generate_chart(df_data = df_data,
@@ -457,3 +534,7 @@ if __name__ == '__main__':
                                     bool_merge_plotly_chart_with_other_chart_True_or_False = True,
                                     class_trading_exit_price = class_tep
                                     )
+
+#%%
+
+
