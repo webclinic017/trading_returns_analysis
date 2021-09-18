@@ -28,8 +28,7 @@ install_requires=   ['asset_price_etl==2.3.1.dev0+gca00cc8.d20210918',
                         'packaging==20.9',
                         'numpy==1.21.1',
                         'plotly==5.1.0',
-                        'pandas==1.2.5',
-                        'trading_direction==1.0.2.dev0+gd8a0b66.d20210830']
+                        'pandas==1.2.5']
 
 
 )
