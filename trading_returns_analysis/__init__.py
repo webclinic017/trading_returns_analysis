@@ -174,7 +174,8 @@ def CUMULATIVE_AND_ROLLING_WIN_RATE(df_data = None,
 def CLOSED_TRADES_PERCENTAGE_CHANGE(df_data = None,
                      str_column_trade_entry_price_column_name: (str) = None,
                      str_column_trade_direction_column_name: (str) = None,
-                     str_column_trade_exit_price_column_name: (str) = None):
+                     str_column_trade_exit_price_column_name: (str) = None,
+                     int_future_closing_lag_number_of_days = None):
     
     # Get the percentage change between the exit price and the entry price
 
@@ -189,7 +190,7 @@ def CLOSED_TRADES_PERCENTAGE_CHANGE(df_data = None,
                                                    df_data['SingleTradePercentageChange'] * -1,
                                                    df_data['SingleTradePercentageChange'])
     
-
+    df_data['SingleTradePercentageChange'] = df_data['SingleTradePercentageChange'].shift(int_future_closing_lag_number_of_days)
     
     # Generate Cumulative Return
     
@@ -282,13 +283,15 @@ def func_df_generate_returns_analysis(  df_data = None,
                                         int_initial_balance_in_usd = None,
                                         float_percent_risk_per_trade = None,
                                         bool_appy_kelly_criterion_True_or_False = None,
-                                        float_kelly_criterion_multiplier = None
+                                        float_kelly_criterion_multiplier = None,
+                                        int_future_closing_lag_number_of_days = None
                                      ):
     
     df_data = CLOSED_TRADES_PERCENTAGE_CHANGE(df_data = df_data,
                                                 str_column_trade_entry_price_column_name = str_column_trade_entry_price_column_name,
                                                 str_column_trade_direction_column_name = str_column_trade_direction_column_name,
-                                                str_column_trade_exit_price_column_name = str_column_trade_exit_price_column_name)
+                                                str_column_trade_exit_price_column_name = str_column_trade_exit_price_column_name,
+                                                int_future_closing_lag_number_of_days = int_future_closing_lag_number_of_days)
     
     
     df_data = CUMULATIVE_AND_ROLLING_WIN_RATE(df_data = df_data,
@@ -479,7 +482,7 @@ if __name__ == '__main__':
     from trading_direction import func_list_str_generate_random_trades as td
 
     
-    df_data = etl._function_extract(_str_valuedate_start = '1/1/2002',
+    df_data = etl._function_extract(_str_valuedate_start = '1/1/2020',
                                      _str_valuedate_end = '12/31/2020',
                                      _str_resample_frequency = 'D',
                                      str_currency_pair = 'EURUSD')
@@ -520,7 +523,8 @@ if __name__ == '__main__':
                                                 int_initial_balance_in_usd = 10_000,
                                                 float_percent_risk_per_trade = 0.01,
                                                 bool_appy_kelly_criterion_True_or_False = True,
-                                                float_kelly_criterion_multiplier = 0.1
+                                                float_kelly_criterion_multiplier = 0.1,
+                                                int_future_closing_lag_number_of_days = 7
                                                 )
     
     func_plotlychart_generate_chart(df_data = df_data,
@@ -571,7 +575,8 @@ if __name__ == '__main__':
                                                 int_initial_balance_in_usd = 10_000,
                                                 float_percent_risk_per_trade = 0.01,
                                                 bool_appy_kelly_criterion_True_or_False = True,
-                                                float_kelly_criterion_multiplier = 0.1
+                                                float_kelly_criterion_multiplier = 0.1,
+                                                int_future_closing_lag_number_of_days = 7
                                                 )
     #%%    
         

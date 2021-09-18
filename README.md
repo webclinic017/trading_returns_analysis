@@ -45,20 +45,21 @@ To use the module in a pythone terminal, import the module just like other pytho
 
 ### Python Terminal
 ```
+
 from asset_price_etl import etl_fx_histadata_001 as etl
-import trading_returns_analysis as tra
 import trading_exit_price as tep
 from trading_direction import func_list_str_generate_random_trades as td
 
 
-df_data = etl._function_extract(_str_valuedate_start = '1/1/2018',
-                                    _str_valuedate_end = '12/7/2018',
-                                    _str_resample_frequency = 'D')
+df_data = etl._function_extract(_str_valuedate_start = '1/1/2020',
+                                    _str_valuedate_end = '12/31/2020',
+                                    _str_resample_frequency = 'D',
+                                    str_currency_pair = 'EURUSD')
 
 #%% Create a simulated trade based on random number generation between 0 & 2
 df_data['TradeDirection'] = td.func_list_str_generate_random_trades(df_data)
 
-df_data['TakeProfitRate'] = 0.005
+df_data['TakeProfitRate'] = 0.01
 df_data['StoplossRate'] = 0.005
 
 class_tep = tep.trading_exit_price( df_data = df_data,
@@ -74,26 +75,90 @@ class_tep = tep.trading_exit_price( df_data = df_data,
 
 df_data = class_tep.df_data
 
+
+
+
+#%%
 class_tep.generate_plotly_chart_showing_stoploss_and_takeprofit()
 
 class_tep.generate_plot_single_trade_trailing_stoploss_and_takeprofit(str_date = '2018-08-02')
 
 
-df_data = tra.func_df_generate_returns_analysis(df_data = df_data,
+df_data = func_df_generate_returns_analysis(df_data = df_data,
                                             str_column_trade_entry_price_column_name = 'Open',
                                             str_column_trade_direction_column_name = 'TradeDirection',
                                             str_column_trade_exit_price_column_name = 'ExitPrice',
-                                            str_column_trade_exit_date_column_name = 'ExitDate'
+                                            str_column_trade_exit_date_column_name = 'ExitDate',
+                                            int_initial_balance_in_usd = 10_000,
+                                            float_percent_risk_per_trade = 0.01,
+                                            bool_appy_kelly_criterion_True_or_False = True,
+                                            float_kelly_criterion_multiplier = 0.1,
+                                            int_future_closing_lag_number_of_days = 7
                                             )
 
-tra.func_plotlychart_generate_chart(df_data = df_data,
+func_plotlychart_generate_chart(df_data = df_data,
                                 str_cumulative_return_column_name = 'CumulativeReturn',
                                 str_cumulative_win_rate_column_name = 'WinRateCumulative',
                                 str_cumulative_risk_return_column_name = 'RiskReturnCumulative',
                                 str_cumulative_kelly_criterion_column_name = 'KellyCriterionCumulative',
+                                str_CumulativeBalanceUSD_column_name = 'CumulativeBalanceUSD',
                                 bool_merge_plotly_chart_with_other_chart_True_or_False = True,
                                 class_trading_exit_price = class_tep
                                 )
+
+
+dict_output = func_dict_pdseries_hold_or_reverse_trade_direction_based_on_rolling_trade_return(df_data = df_data,
+                                                                                    str_CumulativeReturn_column_name = 'CumulativeReturn',
+                                                                                str_TradeDirection_column_name = 'TradeDirection',
+                                                                                str_StoplossRate_column_name = 'StoplossRate',
+                                                                                str_TakeProfitRate_column_name = 'TakeProfitRate',
+                                                                                bool_reverse_trade_direction_when_cumulative_return_trend_down_True_or_False = False,
+                                                                                str_rolling_return_sampling_duration = '7D',
+                                                                                bool_hold_trade_when_cumulative_return_trend_down_True_or_False = True,
+                                                                                int_numbers_days_lag_for_to_account_future_closing_trades = 5,
+                                                                                bool_interchange_sl_and_tp_when_cumulative_return_trend_down_True_or_False = False)
+    
+df_data['TradeDirection'] = dict_output['TradeDirection']
+                                                                    
+
+
+
+class_tep = tep.trading_exit_price( df_data = df_data,
+                                str_open_price_column_name = 'Open',
+                                str_high_price_column_name = 'High',
+                                str_low_price_column_name = 'Low',
+                                str_close_price_column_name = 'Close',
+                                str_stoploss_rate_column_name = 'StoplossRate',
+                                str_takeprofit_rate_column_name = 'TakeProfitRate',
+                                str_trade_direction_column_name = 'TradeDirection',
+                                str_stoploss_fix_or_variable = 'fix',
+                                bool_exit_price_and_exit_date_only_True_or_False = False)
+
+df_data = class_tep.df_data
+
+df_data = func_df_generate_returns_analysis(df_data = df_data,
+                                            str_column_trade_entry_price_column_name = 'Open',
+                                            str_column_trade_direction_column_name = 'TradeDirection',
+                                            str_column_trade_exit_price_column_name = 'ExitPrice',
+                                            str_column_trade_exit_date_column_name = 'ExitDate',
+                                            int_initial_balance_in_usd = 10_000,
+                                            float_percent_risk_per_trade = 0.01,
+                                            bool_appy_kelly_criterion_True_or_False = True,
+                                            float_kelly_criterion_multiplier = 0.1,
+                                            int_future_closing_lag_number_of_days = 7
+                                            )
+#%%    
+    
+func_plotlychart_generate_chart(df_data = df_data,
+                                str_cumulative_return_column_name = 'CumulativeReturn',
+                                str_cumulative_win_rate_column_name = 'WinRateCumulative',
+                                str_cumulative_risk_return_column_name = 'RiskReturnCumulative',
+                                str_cumulative_kelly_criterion_column_name = 'KellyCriterionCumulative',
+                                str_CumulativeBalanceUSD_column_name = 'CumulativeBalanceUSD',
+                                bool_merge_plotly_chart_with_other_chart_True_or_False = True,
+                                class_trading_exit_price = class_tep
+                                )
+
 ```
 
 
