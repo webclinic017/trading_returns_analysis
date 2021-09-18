@@ -402,12 +402,11 @@ def func_dict_pdseries_hold_or_reverse_trade_direction_based_on_rolling_trade_re
                                                                                     bool_reverse_trade_direction_when_cumulative_return_trend_down_True_or_False = False,
                                                                                     str_rolling_return_sampling_duration = None,
                                                                                     bool_hold_trade_when_cumulative_return_trend_down_True_or_False = None,
-                                                                                    int_numbers_days_lag_for_to_account_future_closing_trades = 5,
                                                                                     bool_interchange_sl_and_tp_when_cumulative_return_trend_down_True_or_False = None):
         
         df_data = df_data.copy()
         
-        df_data['CumulativeReturnReverseIndicatorSMA'] = df_data.CumulativeReturn.shift(int_numbers_days_lag_for_to_account_future_closing_trades).rolling(str_rolling_return_sampling_duration).mean().fillna(0)
+        df_data['CumulativeReturnReverseIndicatorSMA'] = df_data.CumulativeReturn.rolling(str_rolling_return_sampling_duration).mean().fillna(0)
         
         if bool_hold_trade_when_cumulative_return_trend_down_True_or_False == True:
             df_data[str_TradeDirection_column_name] = np.where(( df_data[str_CumulativeReturn_column_name] > df_data.CumulativeReturnReverseIndicatorSMA),
