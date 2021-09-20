@@ -66,6 +66,7 @@ trading_returns_analysis/__init__.py
 trading_returns_analysis.egg-info/PKG-INFO
 trading_returns_analysis.egg-info/SOURCES.txt
 trading_returns_analysis.egg-info/dependency_links.txt
+trading_returns_analysis.egg-info/requires.txt
 trading_returns_analysis.egg-info/top_level.txt
 trading_returns_analysis/.vscode/settings.json
 trading_returns_analysis/__pycache__/__init__.cpython-39.pyc

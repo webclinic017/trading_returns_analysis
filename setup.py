@@ -10,7 +10,7 @@ classifiers = [
 
 setup(
 name = 'trading_returns_analysis',
-version ='1.5.2',
+version ='1.6.0',
 description = 'trading_returns _analysis modules contains function to analyze a timeseries of trading returns. Such as, cumulative returns monthly returns, etc.',
 url= 'https://github.com/Iankfc/trading_returns_analysis',
 author='ece',
@@ -21,6 +21,6 @@ keywords='None',
 packages=find_packages(),
 use_scm_version=True,
 include_package_data=True,
-setup_requires=['setuptools_scm']
-#install_requires = open('requirements.txt','r').read().split('\n')[:-1]
+setup_requires=['setuptools_scm'],
+install_requires = open('requirements.txt','r').read().split('\n')[:-1]
 )

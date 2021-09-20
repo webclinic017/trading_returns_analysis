@@ -524,7 +524,6 @@ def func_df_plotlychart_generate_returns_analysis(df_data = None,
                                                 bool_appy_kelly_criterion_True_or_False = None,
                                                 float_kelly_criterion_multiplier = None,
                                                 int_future_closing_lag_number_of_days = None,
-                                                class_trading_exit_price = None,
                                                 str_stoploss_fix_or_variable = None,
                                                 bool_apply_CumulativeReturnReverseIndicatorSMA_True_or_False = None,
                                                 str_rolling_return_sampling_duration_for_trade_hold_or_reverse = None):
@@ -532,6 +531,19 @@ def func_df_plotlychart_generate_returns_analysis(df_data = None,
     
     df_data = df_data.copy()
     
+    class_tep = tep.trading_exit_price( df_data = df_data,
+                                str_open_price_column_name = 'Open',
+                                str_high_price_column_name = 'High',
+                                str_low_price_column_name = 'Low',
+                                str_close_price_column_name = 'Close',
+                                str_stoploss_rate_column_name = 'StoplossRate',
+                                str_takeprofit_rate_column_name = 'TakeProfitRate',
+                                str_trade_direction_column_name = 'TradeDirection',
+                                str_stoploss_fix_or_variable = str_stoploss_fix_or_variable,
+                                bool_exit_price_and_exit_date_only_True_or_False = False)
+
+    df_data = class_tep.df_data
+        
     df_data = func_df_generate_returns_analysis(df_data = df_data,
                                                 str_column_trade_entry_price_column_name = str_column_trade_entry_price_column_name,
                                                 str_column_trade_direction_column_name = str_column_trade_direction_column_name,
@@ -542,7 +554,7 @@ def func_df_plotlychart_generate_returns_analysis(df_data = None,
                                                 bool_appy_kelly_criterion_True_or_False = bool_appy_kelly_criterion_True_or_False,
                                                 float_kelly_criterion_multiplier = float_kelly_criterion_multiplier,
                                                 int_future_closing_lag_number_of_days = int_future_closing_lag_number_of_days,
-                                                class_trading_exit_price = class_trading_exit_price
+                                                class_trading_exit_price = class_tep
                                                 )
     
 
@@ -587,7 +599,7 @@ def func_df_plotlychart_generate_returns_analysis(df_data = None,
                                                     bool_appy_kelly_criterion_True_or_False = bool_appy_kelly_criterion_True_or_False,
                                                     float_kelly_criterion_multiplier = float_kelly_criterion_multiplier,
                                                     int_future_closing_lag_number_of_days = int_future_closing_lag_number_of_days,
-                                                    class_trading_exit_price = class_trading_exit_price
+                                                    class_trading_exit_price = class_tep
                                                     )
     
     return df_data
@@ -612,23 +624,6 @@ if __name__ == '__main__':
     df_data['TakeProfitRate'] = 0.01
     df_data['StoplossRate'] = 0.005
     
-    class_tep = tep.trading_exit_price( df_data = df_data,
-                                    str_open_price_column_name = 'Open',
-                                    str_high_price_column_name = 'High',
-                                    str_low_price_column_name = 'Low',
-                                    str_close_price_column_name = 'Close',
-                                    str_stoploss_rate_column_name = 'StoplossRate',
-                                    str_takeprofit_rate_column_name = 'TakeProfitRate',
-                                    str_trade_direction_column_name = 'TradeDirection',
-                                    str_stoploss_fix_or_variable = 'fix',
-                                    bool_exit_price_and_exit_date_only_True_or_False = False)
-    
-    df_data = class_tep.df_data
-    
-
-    class_tep.generate_plotly_chart_showing_stoploss_and_takeprofit()
-    
-    class_tep.generate_plot_single_trade_trailing_stoploss_and_takeprofit(str_date = '2018-08-02')
 
     
     df_data = func_df_plotlychart_generate_returns_analysis(df_data = df_data,
@@ -641,11 +636,8 @@ if __name__ == '__main__':
                                                             bool_appy_kelly_criterion_True_or_False = True,
                                                             float_kelly_criterion_multiplier = 0.1,
                                                             int_future_closing_lag_number_of_days = 14,
-                                                            class_trading_exit_price = class_tep,
                                                             str_stoploss_fix_or_variable = 'variable',
                                                             bool_apply_CumulativeReturnReverseIndicatorSMA_True_or_False = True,
                                                             str_rolling_return_sampling_duration_for_trade_hold_or_reverse = '30D')
     
-
-    df_data.to_excel('Output.xlsx')
 
