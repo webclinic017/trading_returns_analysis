@@ -526,7 +526,10 @@ def func_df_plotlychart_generate_returns_analysis(df_data = None,
                                                 int_future_closing_lag_number_of_days = None,
                                                 str_stoploss_fix_or_variable = None,
                                                 bool_apply_CumulativeReturnReverseIndicatorSMA_True_or_False = None,
-                                                str_rolling_return_sampling_duration_for_trade_hold_or_reverse = None):
+                                                str_rolling_return_sampling_duration_for_trade_hold_or_reverse = None,
+                                                bool_reverse_trade_direction_when_cumulative_return_trend_down_True_or_False = None,
+                                                bool_hold_trade_when_cumulative_return_trend_down_True_or_False = None,
+                                                bool_interchange_sl_and_tp_when_cumulative_return_trend_down_True_or_False = None):
     
     
     df_data = df_data.copy()
@@ -566,10 +569,10 @@ def func_df_plotlychart_generate_returns_analysis(df_data = None,
                                                                                                         str_TradeDirection_column_name = 'TradeDirection',
                                                                                                         str_StoplossRate_column_name = 'StoplossRate',
                                                                                                         str_TakeProfitRate_column_name = 'TakeProfitRate',
-                                                                                                        bool_reverse_trade_direction_when_cumulative_return_trend_down_True_or_False = False,
+                                                                                                        bool_reverse_trade_direction_when_cumulative_return_trend_down_True_or_False = bool_reverse_trade_direction_when_cumulative_return_trend_down_True_or_False,
                                                                                                         str_rolling_return_sampling_duration = str_rolling_return_sampling_duration_for_trade_hold_or_reverse,
-                                                                                                        bool_hold_trade_when_cumulative_return_trend_down_True_or_False = True,
-                                                                                                        bool_interchange_sl_and_tp_when_cumulative_return_trend_down_True_or_False = False)
+                                                                                                        bool_hold_trade_when_cumulative_return_trend_down_True_or_False = bool_hold_trade_when_cumulative_return_trend_down_True_or_False,
+                                                                                                        bool_interchange_sl_and_tp_when_cumulative_return_trend_down_True_or_False = bool_interchange_sl_and_tp_when_cumulative_return_trend_down_True_or_False)
             
         df_data['TradeDirection'] = dict_output['TradeDirection']
         df_data['CumulativeReturnReverseIndicatorSMA'] = dict_output['CumulativeReturnReverseIndicatorSMA']
@@ -638,6 +641,9 @@ if __name__ == '__main__':
                                                             int_future_closing_lag_number_of_days = 14,
                                                             str_stoploss_fix_or_variable = 'variable',
                                                             bool_apply_CumulativeReturnReverseIndicatorSMA_True_or_False = True,
-                                                            str_rolling_return_sampling_duration_for_trade_hold_or_reverse = '30D')
-    
+                                                            str_rolling_return_sampling_duration_for_trade_hold_or_reverse = '30D',
+                                                            bool_reverse_trade_direction_when_cumulative_return_trend_down_True_or_False = False,
+                                                            bool_hold_trade_when_cumulative_return_trend_down_True_or_False = True,
+                                                            bool_interchange_sl_and_tp_when_cumulative_return_trend_down_True_or_False = False)
+                
 

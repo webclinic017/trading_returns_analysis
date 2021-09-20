@@ -1,7 +1,8 @@
 
 # Change Log
 All notable changes to this project will be documented in this file.
-
+## v1.6.1 - 2021-09-21
+  Fix bug - Missing option to reverse or hold lossing trades
 ## v1.6.0 - 2021-09-21
   Add feature - Incorporate trading_exit_price module inside the trading_returns_analysis module
 

@@ -75,7 +75,10 @@ df_data = tra.func_df_plotlychart_generate_returns_analysis(df_data = df_data,
                                                         int_future_closing_lag_number_of_days = 14,
                                                         str_stoploss_fix_or_variable = 'variable',
                                                         bool_apply_CumulativeReturnReverseIndicatorSMA_True_or_False = True,
-                                                        str_rolling_return_sampling_duration_for_trade_hold_or_reverse = '30D')
+                                                        str_rolling_return_sampling_duration_for_trade_hold_or_reverse = '30D',
+                                                        bool_reverse_trade_direction_when_cumulative_return_trend_down_True_or_False = False,
+                                                        bool_hold_trade_when_cumulative_return_trend_down_True_or_False = True,
+                                                        bool_interchange_sl_and_tp_when_cumulative_return_trend_down_True_or_False = False)
 
 
 ```
