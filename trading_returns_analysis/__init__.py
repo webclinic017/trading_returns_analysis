@@ -18,6 +18,7 @@ from scipy import stats
 import plotly.graph_objects as go
 import plotly.io as pio
 from plotly.subplots import make_subplots
+import trading_exit_price as tep
 
 #%%
 def KELLY_FORMULA(x: (np.ndarray) = None):

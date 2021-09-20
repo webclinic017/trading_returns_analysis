@@ -1,6 +1,6 @@
 Metadata-Version: 1.1
 Name: trading-returns-analysis
-Version: 1.5.1.dev0+gaf72e00.d20210920
+Version: 1.5.2.dev0+g10c2140.d20210920
 Summary: trading_returns _analysis modules contains function to analyze a timeseries of trading returns. Such as, cumulative returns monthly returns, etc.
 Home-page: https://github.com/Iankfc/trading_returns_analysis
 Author: ece
