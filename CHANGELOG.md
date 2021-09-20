@@ -1,7 +1,8 @@
 
 # Change Log
 All notable changes to this project will be documented in this file.
-
+## v1.5.1 - 2021-09-20
+  Fix bug - fix plotly chart variable
 ## v1.5.0 - 2021-09-19
   Add feature - Combine data frame and plotly chart
 

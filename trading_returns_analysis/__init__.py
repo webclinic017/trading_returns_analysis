@@ -330,7 +330,7 @@ def func_df_generate_returns_analysis(  df_data = None,
                                 str_cumulative_kelly_criterion_column_name = 'KellyCriterionCumulative',
                                 str_CumulativeBalanceUSD_column_name = 'CumulativeBalanceUSD',
                                 bool_merge_plotly_chart_with_other_chart_True_or_False = True,
-                                class_trading_exit_price = class_tep
+                                class_trading_exit_price = class_trading_exit_price
                                 )
         
     return df_data
@@ -450,15 +450,12 @@ def func_dict_pdseries_hold_or_reverse_trade_direction_based_on_rolling_trade_re
         df_data['CumulativeReturnReverseIndicatorSMA'] = df_data.CumulativeReturn.rolling(str_rolling_return_sampling_duration).mean().fillna(0)
         
         if bool_hold_trade_when_cumulative_return_trend_down_True_or_False == True:
-            df_data[str_TradeDirection_column_name] = np.where(( df_data[str_CumulativeReturn_column_name] > df_data.CumulativeReturnReverseIndicatorSMA),
-                                                df_data.TradeDirection,
-                                                np.where(df_data.TradeDirection == 'Long',
-                                                        'Hold',
-                                                        np.where(df_data.TradeDirection == 'Short',
-                                                                'Hold',
-                                                                df_data.TradeDirection)
-                                                        )
-                                                )
+
+            df_data[str_TradeDirection_column_name] = np.where( df_data[str_CumulativeReturn_column_name] > df_data.CumulativeReturnReverseIndicatorSMA,
+                                                                df_data.TradeDirection,
+                                                                'Hold'
+                                                                )
+            
         elif bool_reverse_trade_direction_when_cumulative_return_trend_down_True_or_False == True:
             df_data[str_TradeDirection_column_name] = np.where(( df_data[str_CumulativeReturn_column_name] > df_data.CumulativeReturnReverseIndicatorSMA),
                                     df_data.TradeDirection,
@@ -550,7 +547,7 @@ def func_df_plotlychart_generate_returns_analysis(df_data = None,
 
     
     if bool_apply_CumulativeReturnReverseIndicatorSMA_True_or_False == True:
-    
+ 
         dict_output = func_dict_pdseries_hold_or_reverse_trade_direction_based_on_rolling_trade_return(df_data = df_data,
                                                                                                         str_CumulativeReturn_column_name = 'CumulativeReturn',
                                                                                                         str_TradeDirection_column_name = 'TradeDirection',
@@ -646,8 +643,8 @@ if __name__ == '__main__':
                                                             class_trading_exit_price = class_tep,
                                                             str_stoploss_fix_or_variable = 'variable',
                                                             bool_apply_CumulativeReturnReverseIndicatorSMA_True_or_False = True,
-                                                            str_rolling_return_sampling_duration_for_trade_hold_or_reverse = '7D')
+                                                            str_rolling_return_sampling_duration_for_trade_hold_or_reverse = '30D')
     
 
-
+    df_data.to_excel('Output.xlsx')
 
