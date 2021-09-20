@@ -2,7 +2,7 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## v1.5.1 - 2021-09-20
+## v1.5.2 - 2021-09-20
   Fix bug - missing trading_exit_price module
 ## v1.5.1 - 2021-09-20
   Fix bug - fix plotly chart variable
