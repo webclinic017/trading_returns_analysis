@@ -1,7 +1,9 @@
-pandas==1.2.5
+asset_price_etl==3.0.1.dev0+g06ef31e.d20211123
 numpy==1.21.1
-plotly==5.1.0
-asset_price_etl==2.3.1.dev0+gca00cc8.d20210918
 packaging==20.9
-trading_exit_price==1.2.2.dev0+g8cf3c69.d20210913
-scipy==1.7.1
+pandas==1.2.5
+plotly==5.1.0
+scipy==1.7.2
+setuptools==58.0.4
+trading_direction==1.1.1.dev0+gfe88784.d20211123
+trading_exit_price==2.0.1.dev0+ge57014a.d20211123

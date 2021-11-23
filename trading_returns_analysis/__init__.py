@@ -611,13 +611,13 @@ def func_df_plotlychart_generate_returns_analysis(df_data = None,
 
 if __name__ == '__main__':
     
-    from asset_price_etl import etl_fx_histadata_001 as etl
+    from asset_price_etl.Download_Scripts import etl_fx_histadata_001 as etl
     import trading_exit_price as tep
     from trading_direction import func_list_str_generate_random_trades as td
 
     
-    df_data = etl._function_extract(_str_valuedate_start = '1/1/2020',
-                                     _str_valuedate_end = '12/31/2020',
+    df_data = etl._function_extract(_str_valuedate_start = '1/1/2011',
+                                     _str_valuedate_end = '12/31/2011',
                                      _str_resample_frequency = 'D',
                                      str_currency_pair = 'EURUSD')
     

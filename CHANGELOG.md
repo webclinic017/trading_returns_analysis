@@ -1,6 +1,9 @@
 
 # Change Log
 All notable changes to this project will be documented in this file.
+## v2.0.0 - 2021-11-24
+  Maintenance - Update python dependencies
+
 ## v1.6.1 - 2021-09-21
   Fix bug - Missing option to reverse or hold lossing trades
 ## v1.6.0 - 2021-09-21
