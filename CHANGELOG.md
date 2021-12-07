@@ -1,6 +1,10 @@
 
 # Change Log
 All notable changes to this project will be documented in this file.
+
+## v2.0.2 - 2021-12-07
+  Big fix - Error in creating rolling return with data less than the rolling duration
+  
 ## v2.0.1 - 2021-12-07
   Fix Bug - Incorrect function argument for exit price
 
