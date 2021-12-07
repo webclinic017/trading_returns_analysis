@@ -198,13 +198,19 @@ def CLOSED_TRADES_PERCENTAGE_CHANGE(df_data = None,
     
     df_data['CumulativeReturn'] = df_data['SingleTradePercentageChange'].expanding().apply(lambda x: np.prod(1+x)-1)
     
-    df_data['Rolling30DReturn'] = df_data['SingleTradePercentageChange'].rolling('30D').apply(lambda x: np.prod(1+x)-1)
-    
-    df_data['Rolling3MReturn'] = df_data['SingleTradePercentageChange'].rolling('90D').apply(lambda x: np.prod(1+x)-1)
-    
-    df_data['Rolling6MReturn'] = df_data['SingleTradePercentageChange'].rolling('180D').apply(lambda x: np.prod(1+x)-1)
-    
-    df_data['Rolling9MReturn'] = df_data['SingleTradePercentageChange'].rolling('270D').apply(lambda x: np.prod(1+x)-1)
+    try:
+        df_data['Rolling30DReturn'] = df_data['SingleTradePercentageChange'].rolling('30D').apply(lambda x: np.prod(1+x)-1)
+        
+        df_data['Rolling3MReturn'] = df_data['SingleTradePercentageChange'].rolling('90D').apply(lambda x: np.prod(1+x)-1)
+        
+        df_data['Rolling6MReturn'] = df_data['SingleTradePercentageChange'].rolling('180D').apply(lambda x: np.prod(1+x)-1)
+        
+        df_data['Rolling9MReturn'] = df_data['SingleTradePercentageChange'].rolling('270D').apply(lambda x: np.prod(1+x)-1)
+    except ValueError:
+        df_data['Rolling30DReturn'] = np.nan
+        df_data['Rolling3MReturn'] = np.nan
+        df_data['Rolling6MReturn'] = np.nan
+        df_data['Rolling9MReturn'] = np.nan
     
     return df_data
 
