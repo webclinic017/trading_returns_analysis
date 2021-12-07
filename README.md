@@ -63,11 +63,9 @@ df_data['StoplossRate'] = 0.005
 
 
 
-df_data = tra.func_df_plotlychart_generate_returns_analysis(df_data = df_data,
-                                                            str_column_trade_entry_price_column_name = 'Open',
+df_data = func_df_plotlychart_generate_returns_analysis(df_data = df_data,
+                                                        str_column_trade_entry_price_column_name = 'Open',
                                                         str_column_trade_direction_column_name = 'TradeDirection',
-                                                        str_column_trade_exit_price_column_name = 'ExitPrice',
-                                                        str_column_trade_exit_date_column_name = 'ExitDate',
                                                         int_initial_balance_in_usd = 10_000,
                                                         float_percent_risk_per_trade = 0.01,
                                                         bool_appy_kelly_criterion_True_or_False = True,
@@ -84,6 +82,3 @@ df_data = tra.func_df_plotlychart_generate_returns_analysis(df_data = df_data,
 ```
 
 
-## Usage <a name = "usage"></a>
-
-The module can be use to for extract transform and load (ETL) flow of data science.

@@ -1,4 +1,5 @@
 from setuptools import setup, find_packages
+import trading_returns_analysis
 
 classifiers = [
     'Developement Status :: 5 - Production/Stable',
@@ -10,7 +11,7 @@ classifiers = [
 
 setup(
 name = 'trading_returns_analysis',
-version ='2.0.0',
+version = trading_returns_analysis.__version__,
 description = 'trading_returns _analysis modules contains function to analyze a timeseries of trading returns. Such as, cumulative returns monthly returns, etc.',
 url= 'https://github.com/Iankfc/trading_returns_analysis',
 author='ece',

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+__version__ = '2.0.1'
 __doc__ =  """
 Objective:
     
@@ -550,8 +551,8 @@ def func_df_plotlychart_generate_returns_analysis(df_data = None,
     df_data = func_df_generate_returns_analysis(df_data = df_data,
                                                 str_column_trade_entry_price_column_name = str_column_trade_entry_price_column_name,
                                                 str_column_trade_direction_column_name = str_column_trade_direction_column_name,
-                                                str_column_trade_exit_price_column_name = str_column_trade_exit_price_column_name,
-                                                str_column_trade_exit_date_column_name = str_column_trade_exit_date_column_name,
+                                                str_column_trade_exit_price_column_name = 'ExitPrice',
+                                                    str_column_trade_exit_date_column_name = 'ExitDate',
                                                 int_initial_balance_in_usd = int_initial_balance_in_usd,
                                                 float_percent_risk_per_trade = float_percent_risk_per_trade,
                                                 bool_appy_kelly_criterion_True_or_False = bool_appy_kelly_criterion_True_or_False,
@@ -595,8 +596,8 @@ def func_df_plotlychart_generate_returns_analysis(df_data = None,
         df_data = func_df_generate_returns_analysis(df_data = df_data,
                                                     str_column_trade_entry_price_column_name = str_column_trade_entry_price_column_name,
                                                     str_column_trade_direction_column_name = str_column_trade_direction_column_name,
-                                                    str_column_trade_exit_price_column_name = str_column_trade_exit_price_column_name,
-                                                    str_column_trade_exit_date_column_name = str_column_trade_exit_date_column_name,
+                                                    str_column_trade_exit_price_column_name = 'ExitPrice',
+                                                    str_column_trade_exit_date_column_name = 'ExitDate',
                                                     int_initial_balance_in_usd = int_initial_balance_in_usd,
                                                     float_percent_risk_per_trade = float_percent_risk_per_trade,
                                                     bool_appy_kelly_criterion_True_or_False = bool_appy_kelly_criterion_True_or_False,
@@ -630,10 +631,8 @@ if __name__ == '__main__':
 
     
     df_data = func_df_plotlychart_generate_returns_analysis(df_data = df_data,
-                                                             str_column_trade_entry_price_column_name = 'Open',
+                                                            str_column_trade_entry_price_column_name = 'Open',
                                                             str_column_trade_direction_column_name = 'TradeDirection',
-                                                            str_column_trade_exit_price_column_name = 'ExitPrice',
-                                                            str_column_trade_exit_date_column_name = 'ExitDate',
                                                             int_initial_balance_in_usd = 10_000,
                                                             float_percent_risk_per_trade = 0.01,
                                                             bool_appy_kelly_criterion_True_or_False = True,
