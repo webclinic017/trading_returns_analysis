@@ -83,8 +83,10 @@ def CUMULATIVE_AND_ROLLING_KELLY_CRITERION(df_data = None,
         #Create a rolling  win rate
         list_int_frequency_days = [7,30,60,90,180,365]
         for int_frequency in list_int_frequency_days:
-            df_data[f'KellyCriterion{int_frequency}DaysRolling'] = df_data[str_SingleTradePercentageChange_column_name].rolling(f'{int_frequency}D').apply(lambda x: KELLY_FORMULA(x) )
-
+            try:
+                df_data[f'KellyCriterion{int_frequency}DaysRolling'] = df_data[str_SingleTradePercentageChange_column_name].rolling(f'{int_frequency}D').apply(lambda x: KELLY_FORMULA(x) )
+            except ValueError:
+                df_data[f'KellyCriterion{int_frequency}DaysRolling'] = np.nan
   
     return df_data
 
@@ -125,8 +127,10 @@ def CUMULATIVE_AND_ROLLING_RISK_TO_RETURN_RATIO(df_data = None,
         #Create a rolling  win rate
         list_int_frequency_days = [7,30,60,90,180,365]
         for int_frequency in list_int_frequency_days:
-            df_data[f'RiskReturn{int_frequency}DaysRolling'] = df_data[str_SingleTradePercentageChange_column_name].rolling(f'{int_frequency}D').apply(lambda x: np.sum(x[x>0]) / abs(np.sum(x[x<0])) )
-
+            try:
+                df_data[f'RiskReturn{int_frequency}DaysRolling'] = df_data[str_SingleTradePercentageChange_column_name].rolling(f'{int_frequency}D').apply(lambda x: np.sum(x[x>0]) / abs(np.sum(x[x<0])) )
+            except ValueError:
+                df_data[f'RiskReturn{int_frequency}DaysRolling'] = np.nan
     return df_data
 
 
