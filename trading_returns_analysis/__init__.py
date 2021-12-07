@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__version__ = '2.0.1'
+__version__ = '2.0.2'
 __doc__ =  """
 Objective:
     
@@ -167,8 +167,11 @@ def CUMULATIVE_AND_ROLLING_WIN_RATE(df_data = None,
         #Create a rolling  win rate
         list_int_frequency_days = [7,30,60,90,180,365]
         for int_frequency in list_int_frequency_days:
-            df_data[f'WinRate{int_frequency}DaysRolling'] = df_data[str_SingleTradePercentageChange_column_name].rolling(f'{int_frequency}D').apply(lambda x: np.sum(x>0) / np.sum(~np.isnan(x)) )
-
+            try:
+                df_data[f'WinRate{int_frequency}DaysRolling'] = df_data[str_SingleTradePercentageChange_column_name].rolling(f'{int_frequency}D').apply(lambda x: np.sum(x>0) / np.sum(~np.isnan(x)) )
+            except ValueError:
+                df_data[f'WinRate{int_frequency}DaysRolling'] = np.nan
+                
     return df_data
 
 
