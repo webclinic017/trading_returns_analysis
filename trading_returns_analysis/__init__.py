@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__version__ = '2.0.2'
+__version__ = '3.0.0'
 __doc__ =  """
 Objective:
     
@@ -184,7 +184,7 @@ def CLOSED_TRADES_PERCENTAGE_CHANGE(df_data = None,
                      str_column_trade_entry_price_column_name: (str) = None,
                      str_column_trade_direction_column_name: (str) = None,
                      str_column_trade_exit_price_column_name: (str) = None,
-                     int_future_closing_lag_number_of_days = None):
+                     str_column_trade_exit_date_column_name: str = None):
     
     # Get the percentage change between the exit price and the entry price
 
@@ -199,12 +199,15 @@ def CLOSED_TRADES_PERCENTAGE_CHANGE(df_data = None,
                                                    df_data['SingleTradePercentageChange'] * -1,
                                                    df_data['SingleTradePercentageChange'])
     
-    df_data['SingleTradePercentageChange'] = df_data['SingleTradePercentageChange'].shift(int_future_closing_lag_number_of_days)
+    #df_data['SingleTradePercentageChange'] = df_data['SingleTradePercentageChange'].shift(int_future_closing_lag_number_of_days)
     
-    # Generate Cumulative Return
-    
-    df_data['CumulativeReturn'] = df_data['SingleTradePercentageChange'].expanding().apply(lambda x: np.prod(1+x)-1)
-    
+    df_data['CumulativeReturn'] = None
+    for int_row_number in range(df_data.shape[0]):
+        nparray_single_trade_percentage_change = np.where(df_data.index[int_row_number] > df_data[str_column_trade_exit_date_column_name][0:int_row_number],
+                                                            df_data['SingleTradePercentageChange'][0:int_row_number],
+                                                            0)
+        df_data['CumulativeReturn'][int_row_number] = np.prod(1 + nparray_single_trade_percentage_change) - 1
+
     try:
         df_data['Rolling30DReturn'] = df_data['SingleTradePercentageChange'].rolling('30D').apply(lambda x: np.prod(1+x)-1)
         
@@ -301,7 +304,6 @@ def func_df_generate_returns_analysis(  df_data = None,
                                         float_percent_risk_per_trade = None,
                                         bool_appy_kelly_criterion_True_or_False = None,
                                         float_kelly_criterion_multiplier = None,
-                                        int_future_closing_lag_number_of_days = None,
                                         class_trading_exit_price = None
                                      ):
     
@@ -309,7 +311,7 @@ def func_df_generate_returns_analysis(  df_data = None,
                                                 str_column_trade_entry_price_column_name = str_column_trade_entry_price_column_name,
                                                 str_column_trade_direction_column_name = str_column_trade_direction_column_name,
                                                 str_column_trade_exit_price_column_name = str_column_trade_exit_price_column_name,
-                                                int_future_closing_lag_number_of_days = int_future_closing_lag_number_of_days)
+                                                str_column_trade_exit_date_column_name = str_column_trade_exit_date_column_name)
     
     
     df_data = CUMULATIVE_AND_ROLLING_WIN_RATE(df_data = df_data,
@@ -462,8 +464,13 @@ def func_dict_pdseries_hold_or_reverse_trade_direction_based_on_rolling_trade_re
         df_data = df_data.copy()
         
         df_data['CumulativeReturnOriginal'] = df_data.CumulativeReturn.copy()
-        df_data['CumulativeReturnReverseIndicatorSMA'] = df_data.CumulativeReturn.rolling(str_rolling_return_sampling_duration).mean().fillna(0)
-        
+
+        try:
+            df_data['CumulativeReturnReverseIndicatorSMA'] = df_data.CumulativeReturn.rolling(str_rolling_return_sampling_duration).mean().fillna(0)
+        except ValueError:
+            print('In case of an error change the rolling period to either the conventional string or with an integer')
+            print("Change the rolling period to any of these: 'D, 2D, 30D, M, 1, 2, 3")
+
         if bool_hold_trade_when_cumulative_return_trend_down_True_or_False == True:
 
             df_data[str_TradeDirection_column_name] = np.where( df_data[str_CumulativeReturn_column_name] > df_data.CumulativeReturnReverseIndicatorSMA,
@@ -537,7 +544,6 @@ def func_df_plotlychart_generate_returns_analysis(df_data = None,
                                                 float_percent_risk_per_trade = None,
                                                 bool_appy_kelly_criterion_True_or_False = None,
                                                 float_kelly_criterion_multiplier = None,
-                                                int_future_closing_lag_number_of_days = None,
                                                 str_stoploss_fix_or_variable = None,
                                                 bool_apply_CumulativeReturnReverseIndicatorSMA_True_or_False = None,
                                                 str_rolling_return_sampling_duration_for_trade_hold_or_reverse = None,
@@ -570,7 +576,6 @@ def func_df_plotlychart_generate_returns_analysis(df_data = None,
                                                 float_percent_risk_per_trade = float_percent_risk_per_trade,
                                                 bool_appy_kelly_criterion_True_or_False = bool_appy_kelly_criterion_True_or_False,
                                                 float_kelly_criterion_multiplier = float_kelly_criterion_multiplier,
-                                                int_future_closing_lag_number_of_days = int_future_closing_lag_number_of_days,
                                                 class_trading_exit_price = class_tep
                                                 )
     
@@ -615,7 +620,6 @@ def func_df_plotlychart_generate_returns_analysis(df_data = None,
                                                     float_percent_risk_per_trade = float_percent_risk_per_trade,
                                                     bool_appy_kelly_criterion_True_or_False = bool_appy_kelly_criterion_True_or_False,
                                                     float_kelly_criterion_multiplier = float_kelly_criterion_multiplier,
-                                                    int_future_closing_lag_number_of_days = int_future_closing_lag_number_of_days,
                                                     class_trading_exit_price = class_tep
                                                     )
     
@@ -650,7 +654,6 @@ if __name__ == '__main__':
                                                             float_percent_risk_per_trade = 0.01,
                                                             bool_appy_kelly_criterion_True_or_False = True,
                                                             float_kelly_criterion_multiplier = 0.1,
-                                                            int_future_closing_lag_number_of_days = 14,
                                                             str_stoploss_fix_or_variable = 'variable',
                                                             bool_apply_CumulativeReturnReverseIndicatorSMA_True_or_False = True,
                                                             str_rolling_return_sampling_duration_for_trade_hold_or_reverse = '30D',
