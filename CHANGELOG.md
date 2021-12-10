@@ -2,6 +2,9 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## v3.0.0 - 2021-12-10
+  Bug fix - Incorrect cumulative return which includes future unrealized return. 
+
 ## v2.0.2 - 2021-12-07
   Big fix - Error in creating rolling return with data less than the rolling duration
   

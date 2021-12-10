@@ -63,14 +63,13 @@ df_data['StoplossRate'] = 0.005
 
 
 
-df_data = func_df_plotlychart_generate_returns_analysis(df_data = df_data,
+df_data = tra.func_df_plotlychart_generate_returns_analysis(df_data = df_data,
                                                         str_column_trade_entry_price_column_name = 'Open',
                                                         str_column_trade_direction_column_name = 'TradeDirection',
                                                         int_initial_balance_in_usd = 10_000,
                                                         float_percent_risk_per_trade = 0.01,
                                                         bool_appy_kelly_criterion_True_or_False = True,
                                                         float_kelly_criterion_multiplier = 0.1,
-                                                        int_future_closing_lag_number_of_days = 14,
                                                         str_stoploss_fix_or_variable = 'variable',
                                                         bool_apply_CumulativeReturnReverseIndicatorSMA_True_or_False = True,
                                                         str_rolling_return_sampling_duration_for_trade_hold_or_reverse = '30D',
