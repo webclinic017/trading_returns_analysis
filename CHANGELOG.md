@@ -1,7 +1,10 @@
 
 # Change Log
 All notable changes to this project will be documented in this file.
-## v3.0.0 - 2021-12-13
+
+## v3.2.0 - 2021-12-15
+  Add feature - new function to generate a performance summary of all trading simulations
+## v3.1.0 - 2021-12-13
   Add feature - Upload performance into SQL Server database
 ## v3.0.0 - 2021-12-10
   Bug fix - Incorrect cumulative return which includes future unrealized return. 
