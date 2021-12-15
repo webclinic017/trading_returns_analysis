@@ -1,9 +1,0 @@
-asset_price_etl==3.1.4.dev0+g334599a.d20211206
-numpy==1.21.1
-pandas==1.2.5
-plotly==5.4.0
-scipy==1.7.3
-setuptools==58.0.4
-sql_connection==2.1.2
-trading_direction==1.1.0
-trading_exit_price==2.0.0
