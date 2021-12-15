@@ -1,0 +1,17 @@
+CHANGELOG.md
+MANIFEST.in
+README.md
+requirements.txt
+setup.py
+__pycache__/__init__.cpython-38.pyc
+__pycache__/__init__.cpython-39.pyc
+trading_returns_analysis/__init__.py
+trading_returns_analysis/trading_simulation_summary.py
+trading_returns_analysis/trading_simulation_summary.sql
+trading_returns_analysis.egg-info/PKG-INFO
+trading_returns_analysis.egg-info/SOURCES.txt
+trading_returns_analysis.egg-info/dependency_links.txt
+trading_returns_analysis.egg-info/requires.txt
+trading_returns_analysis.egg-info/top_level.txt
+trading_returns_analysis/.vscode/settings.json
+trading_returns_analysis/__pycache__/__init__.cpython-39.pyc
