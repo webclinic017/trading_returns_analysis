@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__version__ = '3.2.0'
+__version__ = '3.2.1'
 __doc__ =  """
 Objective:
     
@@ -559,12 +559,12 @@ def func_df_plotlychart_generate_returns_analysis(df_data = None,
     list_trading_paramters_column = ['TimeFrame'
                                     ,'Broker'
                                     ,'StrategyName'
-                                    ,'OtherParametersJSON'
+                                    ,'TradingParametersJSON'
                                     ,'InsertDateTime'
                                     ,'PythonFilePath']
 
     df_trading_parameters = df_data[list_trading_paramters_column].reset_index()
-    df_trading_parameters['OtherParametersJSON'] = df_trading_parameters['OtherParametersJSON'].astype(str)
+    df_trading_parameters['TradingParametersJSON'] = df_trading_parameters['TradingParametersJSON'].astype(str)
 
     df_data = df_data.copy()
     
@@ -739,7 +739,7 @@ if __name__ == '__main__':
     df_data['TimeFrame'] = pd.NA
     df_data['Broker'] = pd.NA
     df_data['StrategyName'] = pd.NA
-    df_data['OtherParametersJSON'] = np.array({},dtype = object)
+    df_data['TradingParametersJSON'] = np.array({},dtype = object)
     df_data['InsertDateTime'] = pd.NaT
     df_data['PythonFilePath'] = pd.NA
 
