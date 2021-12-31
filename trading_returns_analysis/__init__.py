@@ -555,7 +555,7 @@ def func_df_plotlychart_generate_returns_analysis(df_data = None,
                                                     bool_reverse_trade_direction_when_cumulative_return_trend_down_True_or_False = None,
                                                     bool_hold_trade_when_cumulative_return_trend_down_True_or_False = None,
                                                     bool_interchange_sl_and_tp_when_cumulative_return_trend_down_True_or_False = None,
-                                                    str_other_trading_parameters_json_column_name = None,
+                                                    dict_other_trading_parameters_json_column_name = None,
                                                     str_timeframe_column_name = None,
                                                     str_broker_column_name = None,
                                                     str_strategy_name_column_name = None,
@@ -568,16 +568,17 @@ def func_df_plotlychart_generate_returns_analysis(df_data = None,
 
     df_data['InsertDateTime'] = datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
     df_data['PythonFilePath'] = main.__file__
+    df_data['TradingParametersJSON'] = np.array(dict_other_trading_parameters_json_column_name, dtype = object)
 
     list_trading_paramters_column = [str_timeframe_column_name
                                     ,str_broker_column_name
                                     ,str_strategy_name_column_name
-                                    ,str_other_trading_parameters_json_column_name
+                                    ,'TradingParametersJSON'
                                     ,'InsertDateTime'
                                     ,'PythonFilePath']
 
     df_trading_parameters = df_data[list_trading_paramters_column].reset_index()
-    df_trading_parameters['TradingParametersJSON'] = df_trading_parameters[str_other_trading_parameters_json_column_name].astype(str)
+    df_trading_parameters['TradingParametersJSON'] = df_trading_parameters["TradingParametersJSON"].astype(str)
 
     df_data = df_data.copy()
     
@@ -755,7 +756,7 @@ if __name__ == '__main__':
     df_data['TimeFrame'] = pd.NA
     df_data['Broker'] = pd.NA
     df_data['StrategyName'] = pd.NA
-    df_data['TradingParametersJSON'] = np.array({},dtype = object)
+    dict_other_trading_parameters_json_column_name = {'PythonVersion':'3.9.5'}
 
 
     df_data = func_df_plotlychart_generate_returns_analysis(df_data = df_data,
@@ -771,7 +772,7 @@ if __name__ == '__main__':
                                                             bool_reverse_trade_direction_when_cumulative_return_trend_down_True_or_False = False,
                                                             bool_hold_trade_when_cumulative_return_trend_down_True_or_False = True,
                                                             bool_interchange_sl_and_tp_when_cumulative_return_trend_down_True_or_False = True,
-                                                            str_other_trading_parameters_json_column_name = 'TradingParametersJSON',
+                                                            dict_other_trading_parameters_json_column_name = dict_other_trading_parameters_json_column_name,
                                                             str_timeframe_column_name = 'TimeFrame',
                                                             str_broker_column_name = 'Broker',
                                                             str_strategy_name_column_name = 'StrategyName',
