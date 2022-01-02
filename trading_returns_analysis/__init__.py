@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__version__ = '3.2.0'
+__version__ = '3.2.1'
 __doc__ =  """
 Objective:
     
@@ -21,6 +21,8 @@ import plotly.io as pio
 from plotly.subplots import make_subplots
 import trading_exit_price as tep
 import sqlserverconnection as sc
+from datetime import datetime
+import __main__ as main
 
 #%%
 def KELLY_FORMULA(x: (np.ndarray) = None):
@@ -305,7 +307,8 @@ def func_df_generate_returns_analysis(  df_data = None,
                                         float_percent_risk_per_trade = None,
                                         bool_appy_kelly_criterion_True_or_False = None,
                                         float_kelly_criterion_multiplier = None,
-                                        class_trading_exit_price = None
+                                        class_trading_exit_price = None,
+                                        bool_generate_plotly_chart_True_or_False = None
                                      ):
     
     df_data = CLOSED_TRADES_PERCENTAGE_CHANGE(df_data = df_data,
@@ -340,16 +343,17 @@ def func_df_generate_returns_analysis(  df_data = None,
                                                                                 bool_appy_kelly_criterion_True_or_False = bool_appy_kelly_criterion_True_or_False,
                                                                                 float_kelly_criterion_multiplier = float_kelly_criterion_multiplier)
     
-    
-    func_plotlychart_generate_chart(df_data = df_data,
-                                str_cumulative_return_column_name = 'CumulativeReturn',
-                                str_cumulative_win_rate_column_name = 'WinRateCumulative',
-                                str_cumulative_risk_return_column_name = 'RiskReturnCumulative',
-                                str_cumulative_kelly_criterion_column_name = 'KellyCriterionCumulative',
-                                str_CumulativeBalanceUSD_column_name = 'CumulativeBalanceUSD',
-                                bool_merge_plotly_chart_with_other_chart_True_or_False = True,
-                                class_trading_exit_price = class_trading_exit_price
-                                )
+    if bool_generate_plotly_chart_True_or_False != False:
+
+        func_plotlychart_generate_chart(df_data = df_data,
+                                    str_cumulative_return_column_name = 'CumulativeReturn',
+                                    str_cumulative_win_rate_column_name = 'WinRateCumulative',
+                                    str_cumulative_risk_return_column_name = 'RiskReturnCumulative',
+                                    str_cumulative_kelly_criterion_column_name = 'KellyCriterionCumulative',
+                                    str_CumulativeBalanceUSD_column_name = 'CumulativeBalanceUSD',
+                                    bool_merge_plotly_chart_with_other_chart_True_or_False = True,
+                                    class_trading_exit_price = class_trading_exit_price
+                                    )
         
     return df_data
 
@@ -460,7 +464,8 @@ def func_dict_pdseries_hold_or_reverse_trade_direction_based_on_rolling_trade_re
                                                                                     bool_reverse_trade_direction_when_cumulative_return_trend_down_True_or_False = False,
                                                                                     str_rolling_return_sampling_duration = None,
                                                                                     bool_hold_trade_when_cumulative_return_trend_down_True_or_False = None,
-                                                                                    bool_interchange_sl_and_tp_when_cumulative_return_trend_down_True_or_False = None):
+                                                                                    bool_interchange_sl_and_tp_when_cumulative_return_trend_down_True_or_False = None,
+                                                                                    bool_generate_plotly_chart_True_or_False = None):
         
         df_data = df_data.copy()
         
@@ -503,28 +508,29 @@ def func_dict_pdseries_hold_or_reverse_trade_direction_based_on_rolling_trade_re
             df_data[str_TakeProfitRate_column_name] = df_data['TakeProfitRateTemp'].copy()
             
             df_data[str_StoplossRate_column_name] = df_data['StoplossRateTemp'].copy()
-        
-            obj_fig = make_subplots(rows = 1 , cols=1, shared_xaxes=True)
-            obj_fig.add_trace(go.Scatter(x=df_data.index, 
-                            y=df_data['CumulativeReturn'],
-                            mode='lines',
-                            name='Cumulative Return'),
-                row = 1 ,
-                col = 1
-                )
-            obj_fig.add_trace(go.Scatter(x=df_data.index, 
-                            y=df_data['CumulativeReturnReverseIndicatorSMA'],
-                            mode='lines',
-                            name='Cumulative Return'),
-                row = 1 ,
-                col = 1
-                )
-            obj_fig.update_layout(  xaxis_rangeslider_visible=False,
-                        autosize=False,
-                        width=1000,
-                        height=500)
-            pio.renderers.default = 'browser'
-            pio.show(obj_fig)
+
+            if bool_generate_plotly_chart_True_or_False != False:
+                obj_fig = make_subplots(rows = 1 , cols=1, shared_xaxes=True)
+                obj_fig.add_trace(go.Scatter(x=df_data.index, 
+                                y=df_data['CumulativeReturn'],
+                                mode='lines',
+                                name='Cumulative Return'),
+                    row = 1 ,
+                    col = 1
+                    )
+                obj_fig.add_trace(go.Scatter(x=df_data.index, 
+                                y=df_data['CumulativeReturnReverseIndicatorSMA'],
+                                mode='lines',
+                                name='Cumulative Return'),
+                    row = 1 ,
+                    col = 1
+                    )
+                obj_fig.update_layout(  xaxis_rangeslider_visible=False,
+                            autosize=False,
+                            width=1000,
+                            height=500)
+                pio.renderers.default = 'browser'
+                pio.show(obj_fig)
     
     
         dict_output = {'TradeDirection':df_data[str_TradeDirection_column_name],
@@ -537,10 +543,13 @@ def func_dict_pdseries_hold_or_reverse_trade_direction_based_on_rolling_trade_re
 
 
 def func_df_plotlychart_generate_returns_analysis(df_data = None,
-                                                    str_column_trade_entry_price_column_name = None,
+                                                    str_open_price_column_name = None,
+                                                    str_high_price_column_name = None,
+                                                    str_low_price_column_name = None,
+                                                    str_close_price_column_name = None,
+                                                    str_stoploss_rate_column_name = None,
+                                                    str_takeprofit_rate_column_name = None,
                                                     str_column_trade_direction_column_name = None,
-                                                    str_column_trade_exit_price_column_name = None,
-                                                    str_column_trade_exit_date_column_name = None,
                                                     int_initial_balance_in_usd = None,
                                                     float_percent_risk_per_trade = None,
                                                     bool_appy_kelly_criterion_True_or_False = None,
@@ -551,46 +560,57 @@ def func_df_plotlychart_generate_returns_analysis(df_data = None,
                                                     bool_reverse_trade_direction_when_cumulative_return_trend_down_True_or_False = None,
                                                     bool_hold_trade_when_cumulative_return_trend_down_True_or_False = None,
                                                     bool_interchange_sl_and_tp_when_cumulative_return_trend_down_True_or_False = None,
-                                                    dict_other_trading_parameters_json_format = {}):
+                                                    dict_other_trading_parameters_json_column_name = None,
+                                                    str_timeframe_column_name = None,
+                                                    str_broker_column_name = None,
+                                                    str_strategy_name_column_name = None,
+                                                    bool_generate_plotly_chart_True_or_False = None
+                                                    ):
     
     assert(bool_hold_trade_when_cumulative_return_trend_down_True_or_False == bool_reverse_trade_direction_when_cumulative_return_trend_down_True_or_False,
           'The variables bool_reverse_trade_direction_when_cumulative_return_trend_down_True_or_False and bool_reverse_trade_direction_when_cumulative_return_trend_down_True_or_False cannot be the same.')
 
-    list_trading_paramters_column = ['TimeFrame'
-                                    ,'Broker'
-                                    ,'StrategyName'
-                                    ,'OtherParametersJSON'
+
+    df_data['InsertDateTime'] = datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
+    df_data['PythonFilePath'] = main.__file__
+    df_data['TradingParametersJSON'] = np.array(dict_other_trading_parameters_json_column_name, dtype = object)
+
+    list_trading_paramters_column = [str_timeframe_column_name
+                                    ,str_broker_column_name
+                                    ,str_strategy_name_column_name
+                                    ,'TradingParametersJSON'
                                     ,'InsertDateTime'
                                     ,'PythonFilePath']
 
     df_trading_parameters = df_data[list_trading_paramters_column].reset_index()
-    df_trading_parameters['OtherParametersJSON'] = df_trading_parameters['OtherParametersJSON'].astype(str)
+    df_trading_parameters['TradingParametersJSON'] = df_trading_parameters["TradingParametersJSON"].astype(str)
 
     df_data = df_data.copy()
     
     class_tep = tep.trading_exit_price( df_data = df_data,
-                                str_open_price_column_name = 'Open',
-                                str_high_price_column_name = 'High',
-                                str_low_price_column_name = 'Low',
-                                str_close_price_column_name = 'Close',
-                                str_stoploss_rate_column_name = 'StoplossRate',
-                                str_takeprofit_rate_column_name = 'TakeProfitRate',
-                                str_trade_direction_column_name = 'TradeDirection',
+                                str_open_price_column_name = str_open_price_column_name,
+                                str_high_price_column_name = str_high_price_column_name,
+                                str_low_price_column_name = str_low_price_column_name,
+                                str_close_price_column_name = str_close_price_column_name,
+                                str_stoploss_rate_column_name = str_stoploss_rate_column_name,
+                                str_takeprofit_rate_column_name = str_takeprofit_rate_column_name,
+                                str_trade_direction_column_name = str_column_trade_direction_column_name,
                                 str_stoploss_fix_or_variable = str_stoploss_fix_or_variable,
                                 bool_exit_price_and_exit_date_only_True_or_False = False)
 
     df_data = class_tep.df_data
         
     df_data = func_df_generate_returns_analysis(df_data = df_data,
-                                                str_column_trade_entry_price_column_name = str_column_trade_entry_price_column_name,
+                                                str_column_trade_entry_price_column_name = str_open_price_column_name,
                                                 str_column_trade_direction_column_name = str_column_trade_direction_column_name,
                                                 str_column_trade_exit_price_column_name = 'ExitPrice',
-                                                    str_column_trade_exit_date_column_name = 'ExitDate',
+                                                str_column_trade_exit_date_column_name = 'ExitDate',
                                                 int_initial_balance_in_usd = int_initial_balance_in_usd,
                                                 float_percent_risk_per_trade = float_percent_risk_per_trade,
                                                 bool_appy_kelly_criterion_True_or_False = bool_appy_kelly_criterion_True_or_False,
                                                 float_kelly_criterion_multiplier = float_kelly_criterion_multiplier,
-                                                class_trading_exit_price = class_tep
+                                                class_trading_exit_price = class_tep,
+                                                bool_generate_plotly_chart_True_or_False = bool_generate_plotly_chart_True_or_False
                                                 )
     
 
@@ -599,13 +619,14 @@ def func_df_plotlychart_generate_returns_analysis(df_data = None,
  
         dict_output = func_dict_pdseries_hold_or_reverse_trade_direction_based_on_rolling_trade_return(df_data = df_data,
                                                                                                         str_CumulativeReturn_column_name = 'CumulativeReturn',
-                                                                                                        str_TradeDirection_column_name = 'TradeDirection',
-                                                                                                        str_StoplossRate_column_name = 'StoplossRate',
-                                                                                                        str_TakeProfitRate_column_name = 'TakeProfitRate',
+                                                                                                        str_TradeDirection_column_name = str_column_trade_direction_column_name,
+                                                                                                        str_StoplossRate_column_name = str_stoploss_rate_column_name,
+                                                                                                        str_TakeProfitRate_column_name = str_takeprofit_rate_column_name,
                                                                                                         bool_reverse_trade_direction_when_cumulative_return_trend_down_True_or_False = bool_reverse_trade_direction_when_cumulative_return_trend_down_True_or_False,
                                                                                                         str_rolling_return_sampling_duration = str_rolling_return_sampling_duration_for_trade_hold_or_reverse,
                                                                                                         bool_hold_trade_when_cumulative_return_trend_down_True_or_False = bool_hold_trade_when_cumulative_return_trend_down_True_or_False,
-                                                                                                        bool_interchange_sl_and_tp_when_cumulative_return_trend_down_True_or_False = bool_interchange_sl_and_tp_when_cumulative_return_trend_down_True_or_False)
+                                                                                                        bool_interchange_sl_and_tp_when_cumulative_return_trend_down_True_or_False = bool_interchange_sl_and_tp_when_cumulative_return_trend_down_True_or_False,
+                                                                                                        bool_generate_plotly_chart_True_or_False = bool_generate_plotly_chart_True_or_False)
             
         df_data['TradeDirection'] = dict_output['TradeDirection']
         df_data['CumulativeReturnReverseIndicatorSMA'] = dict_output['CumulativeReturnReverseIndicatorSMA']
@@ -613,20 +634,20 @@ def func_df_plotlychart_generate_returns_analysis(df_data = None,
                                                                         
         
         class_tep = tep.trading_exit_price( df_data = df_data,
-                                        str_open_price_column_name = 'Open',
-                                        str_high_price_column_name = 'High',
-                                        str_low_price_column_name = 'Low',
-                                        str_close_price_column_name = 'Close',
-                                        str_stoploss_rate_column_name = 'StoplossRate',
-                                        str_takeprofit_rate_column_name = 'TakeProfitRate',
-                                        str_trade_direction_column_name = 'TradeDirection',
+                                        str_open_price_column_name = str_open_price_column_name,
+                                        str_high_price_column_name = str_high_price_column_name,
+                                        str_low_price_column_name = str_low_price_column_name,
+                                        str_close_price_column_name = str_close_price_column_name,
+                                        str_stoploss_rate_column_name = str_stoploss_rate_column_name,
+                                        str_takeprofit_rate_column_name = str_takeprofit_rate_column_name,
+                                        str_trade_direction_column_name = str_column_trade_direction_column_name,
                                         str_stoploss_fix_or_variable = str_stoploss_fix_or_variable,
                                         bool_exit_price_and_exit_date_only_True_or_False = False)
         
         df_data = class_tep.df_data
         
         df_data = func_df_generate_returns_analysis(df_data = df_data,
-                                                    str_column_trade_entry_price_column_name = str_column_trade_entry_price_column_name,
+                                                    str_column_trade_entry_price_column_name = str_open_price_column_name,
                                                     str_column_trade_direction_column_name = str_column_trade_direction_column_name,
                                                     str_column_trade_exit_price_column_name = 'ExitPrice',
                                                     str_column_trade_exit_date_column_name = 'ExitDate',
@@ -634,19 +655,19 @@ def func_df_plotlychart_generate_returns_analysis(df_data = None,
                                                     float_percent_risk_per_trade = float_percent_risk_per_trade,
                                                     bool_appy_kelly_criterion_True_or_False = bool_appy_kelly_criterion_True_or_False,
                                                     float_kelly_criterion_multiplier = float_kelly_criterion_multiplier,
-                                                    class_trading_exit_price = class_tep
+                                                    class_trading_exit_price = class_tep,
+                                                    bool_generate_plotly_chart_True_or_False = bool_generate_plotly_chart_True_or_False
                                                     )
 
     #######################################################
 
-    list_str_columns_to_be_uploaded_in_sql_database = [ 'Open', 
-                                                        'High', 
-                                                        'Low', 
-                                                        'Close', 
-                                                        #'Volume', 
-                                                        'TradeDirection',
-                                                        'TakeProfitRate', 
-                                                        'StoplossRate', 
+    list_str_columns_to_be_uploaded_in_sql_database = [ str_open_price_column_name, 
+                                                        str_high_price_column_name, 
+                                                        str_low_price_column_name, 
+                                                        str_close_price_column_name, 
+                                                        str_column_trade_direction_column_name,
+                                                        str_takeprofit_rate_column_name,
+                                                        str_stoploss_rate_column_name,
                                                         'TakeProfitPrice', 
                                                         'StopLossPrice',
                                                         'TakeProfitHitDate',
@@ -739,13 +760,16 @@ if __name__ == '__main__':
     df_data['TimeFrame'] = pd.NA
     df_data['Broker'] = pd.NA
     df_data['StrategyName'] = pd.NA
-    df_data['OtherParametersJSON'] = np.array({},dtype = object)
-    df_data['InsertDateTime'] = pd.NaT
-    df_data['PythonFilePath'] = pd.NA
+    dict_other_trading_parameters_json_column_name = {'PythonVersion':'3.9.5'}
 
 
     df_data = func_df_plotlychart_generate_returns_analysis(df_data = df_data,
-                                                            str_column_trade_entry_price_column_name = 'Open',
+                                                            str_open_price_column_name = 'Open',
+                                                            str_high_price_column_name = 'High',
+                                                            str_low_price_column_name = 'Low',
+                                                            str_close_price_column_name = 'Close',
+                                                            str_stoploss_rate_column_name = 'StoplossRate',
+                                                            str_takeprofit_rate_column_name = 'TakeProfitRate',
                                                             str_column_trade_direction_column_name = 'TradeDirection',
                                                             int_initial_balance_in_usd = 10_000,
                                                             float_percent_risk_per_trade = 0.01,
@@ -756,7 +780,12 @@ if __name__ == '__main__':
                                                             str_rolling_return_sampling_duration_for_trade_hold_or_reverse = '30D',
                                                             bool_reverse_trade_direction_when_cumulative_return_trend_down_True_or_False = False,
                                                             bool_hold_trade_when_cumulative_return_trend_down_True_or_False = True,
-                                                            bool_interchange_sl_and_tp_when_cumulative_return_trend_down_True_or_False = True)
+                                                            bool_interchange_sl_and_tp_when_cumulative_return_trend_down_True_or_False = True,
+                                                            dict_other_trading_parameters_json_column_name = dict_other_trading_parameters_json_column_name,
+                                                            str_timeframe_column_name = 'TimeFrame',
+                                                            str_broker_column_name = 'Broker',
+                                                            str_strategy_name_column_name = 'StrategyName',
+                                                            bool_generate_plotly_chart_True_or_False = False)
                 
 
 
